@@ -1,0 +1,24 @@
+get:
+  tags:
+    - Маршруты
+  summary: Список станций маршрута
+  description: |
+    Возвращает список всех станций, через которые следует указанный рейс (нить расписания).
+    Позволяет получить полный маршрут движения транспортного средства.
+  operationId: getThreadStations
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/uid'
+    - $ref: '../components/parameters/common.yaml#/from'
+    - $ref: '../components/parameters/common.yaml#/to'
+    - $ref: '../components/parameters/common.yaml#/format'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/date'
+    - $ref: '../components/parameters/common.yaml#/show_systems'
+  responses:
+    '200':
+      description: Успешный ответ со списком станций маршрута
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ThreadStationsResponse'

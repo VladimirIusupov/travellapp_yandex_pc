@@ -1,0 +1,18 @@
+get:
+  tags:
+    - Общее
+  summary: Информация о правах
+  description: |
+    Возвращает информацию об авторских правах и источниках данных.
+  operationId: getCopyrightInfo
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/format'
+    - $ref: '../components/parameters/common.yaml#/lang'
+  responses:
+    '200':
+      description: Успешный ответ с информацией об авторских правах
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CopyrightResponse'

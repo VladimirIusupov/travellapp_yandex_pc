@@ -1,0 +1,26 @@
+get:
+  tags:
+    - Геопоиск
+  summary: Ближайшие станции
+  description: |
+    Возвращает список станций, ближайших к указанным географическим координатам.
+    Позволяет найти станции в радиусе указанного расстояния от заданной точки.
+  operationId: getNearestStations
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/lat'
+    - $ref: '../components/parameters/common.yaml#/lng'
+    - $ref: '../components/parameters/common.yaml#/distance'
+    - $ref: '../components/parameters/common.yaml#/station_types'
+    - $ref: '../components/parameters/common.yaml#/transport_types'
+    - $ref: '../components/parameters/common.yaml#/offset'
+    - $ref: '../components/parameters/common.yaml#/limit'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/format'
+  responses:
+    '200':
+      description: Успешный ответ со списком ближайших станций
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NearestStationsResponse'

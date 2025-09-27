@@ -6,13 +6,42 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E74646BA2E5F030200CC3162 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = E74646B92E5F030200CC3162 /* OpenAPIRuntime */; };
+		E74646BD2E5F031000CC3162 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = E74646BC2E5F031000CC3162 /* OpenAPIURLSession */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E74646A52E5EFCF700CC3162 /* TravellApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TravellApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E7F3F2802E7D866200162F6E /* Exceptions for "TravellApp" folder in "TravellApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/components/parameters/common.yaml,
+			);
+			target = E74646A42E5EFCF700CC3162 /* TravellApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		E7F3F2812E7D866200162F6E /* Exceptions for "TravellApp" folder in "Compile Sources" phase from "TravellApp" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = E74646A12E5EFCF700CC3162 /* Sources */;
+			membershipExceptions = (
+				Resources/components/parameters/common.yaml,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E74646A72E5EFCF700CC3162 /* TravellApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E7F3F2802E7D866200162F6E /* Exceptions for "TravellApp" folder in "TravellApp" target */,
+				E7F3F2812E7D866200162F6E /* Exceptions for "TravellApp" folder in "Compile Sources" phase from "TravellApp" target */,
+			);
 			path = TravellApp;
 			sourceTree = "<group>";
 		};
@@ -23,6 +52,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E74646BD2E5F031000CC3162 /* OpenAPIURLSession in Frameworks */,
+				E74646BA2E5F030200CC3162 /* OpenAPIRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,12 +90,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				E7A8B7FA2E5F0516004594B3 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E74646A72E5EFCF700CC3162 /* TravellApp */,
 			);
 			name = TravellApp;
 			packageProductDependencies = (
+				E74646B92E5F030200CC3162 /* OpenAPIRuntime */,
+				E74646BC2E5F031000CC3162 /* OpenAPIURLSession */,
 			);
 			productName = TravellApp;
 			productReference = E74646A52E5EFCF700CC3162 /* TravellApp.app */;
@@ -94,6 +128,11 @@
 			);
 			mainGroup = E746469C2E5EFCF700CC3162;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E74646B82E5F030200CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				E74646BB2E5F031000CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+				E7A8B7F42E5F0448004594B3 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E74646A62E5EFCF700CC3162 /* Products */;
 			projectDirPath = "";
@@ -123,6 +162,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E7A8B7FA2E5F0516004594B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = E7A8B7F92E5F0516004594B3 /* OpenAPIGenerator */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E74646AE2E5EFCF800CC3162 /* Debug */ = {
@@ -268,9 +314,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = YaPracticum.TravellApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -296,9 +346,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = YaPracticum.TravellApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -324,6 +378,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E74646B82E5F030200CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.2;
+			};
+		};
+		E74646BB2E5F031000CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+		E7A8B7F42E5F0448004594B3 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E74646B92E5F030200CC3162 /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E74646B82E5F030200CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		E74646BC2E5F031000CC3162 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E74646BB2E5F031000CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+		E7A8B7F92E5F0516004594B3 /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E7A8B7F42E5F0448004594B3 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E746469D2E5EFCF700CC3162 /* Project object */;
 }

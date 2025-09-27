@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Геопоиск
+  summary: Ближайший населенный пункт
+  description: |
+    Возвращает ближайший населенный пункт к указанным географическим координатам.
+  operationId: getNearestSettlement
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/lat'
+    - $ref: '../components/parameters/common.yaml#/lng'
+    - $ref: '../components/parameters/common.yaml#/distance'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/format'
+  responses:
+    '200':
+      description: Успешный ответ с информацией о ближайшем населенном пункте
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NearestSettlementResponse'

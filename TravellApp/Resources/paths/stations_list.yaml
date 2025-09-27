@@ -1,0 +1,18 @@
+get:
+  tags:
+    - Станции
+  summary: Список всех станций
+  description: |
+    Возвращает полный список всех станций в системе с поддержкой пагинации и фильтрации.
+  operationId: getStationsList
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/format'
+  responses:
+    '200':
+      description: Успешный ответ со списком станций
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StationsListResponse'

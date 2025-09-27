@@ -1,0 +1,20 @@
+ get:
+  summary: Расписание между станциями
+  description:  |
+    Получение расписания движения между двумя пунктами
+  tags:
+    - Расписание
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/from'
+    - $ref: '../components/parameters/common.yaml#/to'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/transport_types'
+  responses:
+    '200':
+      description: Успешный ответ
+      content:
+        application/json:
+          schema:
+            ref: '#/components/schemas/ScheduleResponse'
+                

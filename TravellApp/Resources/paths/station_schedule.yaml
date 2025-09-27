@@ -1,0 +1,27 @@
+get:
+  tags:
+    - Расписание по станции
+  summary: Расписание по станции
+  description: |
+    Возвращает расписание отправлений и прибытий по указанной станции
+    на указанную дату с фильтрацией по типу транспорта и направлению.
+  operationId: getStationSchedule
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/station'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/format'
+    - $ref: '../components/parameters/common.yaml#/date'
+    - $ref: '../components/parameters/common.yaml#/transport_types'
+    - $ref: '../components/parameters/common.yaml#/direction'
+    - $ref: '../components/parameters/common.yaml#/event'
+    - $ref: '../components/parameters/common.yaml#/system'
+    - $ref: '../components/parameters/common.yaml#/show_systems'
+    - $ref: '../components/parameters/common.yaml#/result_timezone'
+  responses:
+    '200':
+      description: Успешный ответ с расписанием по станции
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StationScheduleResponse'

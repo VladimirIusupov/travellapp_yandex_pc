@@ -1,0 +1,3 @@
+apis:
+  TravellApp/Resources/openapi.yaml:
+    alias: api.rasp.yandex.net

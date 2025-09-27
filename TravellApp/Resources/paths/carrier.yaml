@@ -1,0 +1,19 @@
+get:
+  tags:
+    - Перевозчики
+  summary: Информация о перевозчике
+  description: |
+    Возвращает подробную информацию о перевозчике по его коду.
+  operationId: getCarrierInfo
+  parameters:
+    - $ref: '../components/parameters/common.yaml#/apikey'
+    - $ref: '../components/parameters/common.yaml#/code'
+    - $ref: '../components/parameters/common.yaml#/lang'
+    - $ref: '../components/parameters/common.yaml#/format'
+  responses:
+    '200':
+      description: Успешный ответ с информацией о перевозчике
+      content:
+        application/json:
+          chema:
+            $ref: '#/components/schemas/CarrierInfoResponse'
