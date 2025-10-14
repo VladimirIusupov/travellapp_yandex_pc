@@ -2,7 +2,7 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
-// Алиасы для удобства
+// MARK: - Typealiases for OpenAPI Models
 typealias ScheduleResponse = Components.Schemas.ScheduleResponse
 typealias StationScheduleResponse = Components.Schemas.StationScheduleResponse
 typealias ThreadStationsResponse = Components.Schemas.ThreadStationsResponse
@@ -12,307 +12,271 @@ typealias StationsListResponse = Components.Schemas.StationsListResponse
 typealias CarrierInfoResponse = Components.Schemas.CarrierInfoResponse
 typealias CopyrightResponse = Components.Schemas.CopyrightResponse
 
-// Кастомная ошибка
-enum APIError: Error {
+// MARK: - API Error
+enum APIError: LocalizedError {
     case invalidResponse
+    case unauthorized
+    case notFound
+    case serverError(Int)
+    case networkError(Error)
+    case decodingError(Error)
+    case other(statusCode: Int?)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "Неверный формат ответа сервера."
+        case .unauthorized:
+            return "Ошибка авторизации. Проверьте API ключ."
+        case .notFound:
+            return "Данные не найдены."
+        case .serverError(let code):
+            return "Ошибка сервера (\(code))."
+        case .networkError(let err):
+            return "Ошибка сети: \(err.localizedDescription)"
+        case .decodingError(let err):
+            return "Ошибка при разборе данных: \(err.localizedDescription)"
+        case .other(let code):
+            return "Неизвестная ошибка (\(code.map(String.init) ?? "n/a"))."
+        }
+    }
 }
 
-// Протокол универсального сервиса
-protocol YandexRaspServiceProtocol {
-    func getNearestStations(lat: Double, lng: Double, distance: Int) async throws -> NearestStationsResponse
-    func getSchedule(from: String, to: String) async throws -> ScheduleResponse
-    func getStationSchedule(station: String) async throws -> StationScheduleResponse
-    func getThread(uid: String) async throws -> ThreadStationsResponse
-    func getNearestSettlement(lat: Double, lng: Double, distance: Int) async throws -> NearestSettlementResponse
-    func getStationsList() async throws -> StationsListResponse
-    func getCarrier(code: String) async throws -> CarrierInfoResponse
-    func getCopyright() async throws -> CopyrightResponse
+// MARK: - Simple Async Cache
+actor AsyncCache {
+    private var storage: [String: (value: Any, expiry: Date)] = [:]
+
+    func get<T>(_ key: String, as type: T.Type) -> T? {
+        guard let entry = storage[key],
+              entry.expiry > Date(),
+              let value = entry.value as? T else {
+            storage.removeValue(forKey: key)
+            return nil
+        }
+        return value
+    }
+
+    func set<T>(_ key: String, value: T, ttl: TimeInterval) {
+        storage[key] = (value, Date().addingTimeInterval(ttl))
+    }
 }
 
-
-final class YandexRaspService: YandexRaspServiceProtocol {
+// MARK: - Yandex Rasp Service
+@MainActor
+final class YandexRaspService: ObservableObject {
+    private let apiKey: String
     private let client: Client
-    private let apikey: String
-    
-    init(client: Client, apikey: String) {
-        self.client = client
-        self.apikey = apikey
+    private let cache = AsyncCache()
+    private let logger = Logger()
+
+    private typealias Ops = Operations
+
+    init(apiKey: String) {
+        self.apiKey = apiKey
+        self.client = Client(
+            serverURL: URL(string: "https://api.rasp.yandex.net/v3.0")!,
+            transport: URLSessionTransport()
+        )
     }
-    
-    private func logRequest(_ name: String, parameters: [String: Any] = [:]) {
-        print("🚀 API Request: \(name)")
-        print("   API Key: \(apikey.prefix(8))...")
-        print("   Parameters: \(parameters)")
+
+    // MARK: - Helper Methods
+
+    private func logRequest(_ name: String, parameters: [String: Any]) {
+        logger.info("🚀 Request: \(name), params: \(parameters)")
     }
-    
+
     private func logResponse(_ name: String, success: Bool, details: String = "") {
-        let status = success ? "✅" : "❌"
-        print("\(status) API Response: \(name)")
-        if !details.isEmpty {
-            print("   Details: \(details)")
-        }
+        logger.info("\(success ? "✅" : "❌") \(name) \(details)")
     }
-    
-    // Вспомогательная функция для чтения тела ответа
-    private func readResponseBody(_ body: HTTPBody?) async -> String {
-        guard let body = body else { return "No body" }
-        
+
+    private func handleOperation<T>(
+        name: String,
+        operation: @escaping () async throws -> T
+    ) async throws -> T {
         do {
-            let data = try await Data(collecting: body, upTo: 1024 * 1024) // Читаем до 1MB
-            return String(data: data, encoding: .utf8) ?? "Cannot decode body as UTF-8"
+            let result = try await operation()
+            logResponse(name, success: true)
+            return result
         } catch {
-            return "Error reading body: \(error.localizedDescription)"
-        }
-    }
-    
-    // Ближайшие станции
-    func getNearestStations(lat: Double, lng: Double, distance: Int) async throws -> NearestStationsResponse {
-        logRequest("getNearestStations", parameters: ["lat": lat, "lng": lng, "distance": distance])
-        
-        do {
-            let response = try await client.getNearestStations(query: .init(
-                apikey: apikey,
-                lat: lat,
-                lng: lng,
-                distance: distance
-            ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let stations):
-                    logResponse("getNearestStations", success: true, details: "Found \(stations.stations?.count ?? 0) stations")
-                    return stations
-                @unknown default:
-                    logResponse("getNearestStations", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getNearestStations", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
-            }
-        } catch {
-            logResponse("getNearestStations", success: false, details: "Error: \(error.localizedDescription)")
+            logResponse(name, success: false, details: error.localizedDescription)
             throw error
         }
     }
-    
-    // Расписание между станциями
+
+    private func mapStatusToError(_ status: Int?) -> APIError {
+        switch status {
+        case 401: return .unauthorized
+        case 404: return .notFound
+        case let code? where code >= 500: return .serverError(code)
+        default: return .other(statusCode: status)
+        }
+    }
+
+    // MARK: - API Calls
+
     func getSchedule(from: String, to: String) async throws -> ScheduleResponse {
         logRequest("getSchedule", parameters: ["from": from, "to": to])
-        
-        do {
-            let response = try await client.getSchedule(query: .init(
-                apikey: apikey,
+        return try await handleOperation(name: "getSchedule") { [self] in
+            let input = Ops.getSchedule.Input(query: .init(
+                apikey: self.apiKey,
                 from: from,
-                to: to
+                to: to,
+                lang: nil,
+                transport_types: nil,
+                limit: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let schedule):
-                    logResponse("getSchedule", success: true, details: "Found \(schedule.segments?.count ?? 0) segments")
-                    return schedule
-                @unknown default:
-                    logResponse("getSchedule", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getSchedule", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            let result = try await self.client.getSchedule(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getSchedule", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
     }
-    
-    // Расписание на станции
+
     func getStationSchedule(station: String) async throws -> StationScheduleResponse {
         logRequest("getStationSchedule", parameters: ["station": station])
-        
-        do {
-            let response = try await client.getStationSchedule(query: .init(
-                apikey: apikey,
-                station: station
+        return try await handleOperation(name: "getStationSchedule") { [self] in
+            let input = Ops.getStationSchedule.Input(query: .init(
+                apikey: self.apiKey,
+                station: station,
+                lang: nil,
+                format: nil,
+                date: nil,
+                limit: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let schedule):
-                    logResponse("getStationSchedule", success: true, details: "Schedule retrieved")
-                    return schedule
-                @unknown default:
-                    logResponse("getStationSchedule", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getStationSchedule", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            let result = try await self.client.getStationSchedule(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getStationSchedule", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
     }
-    
-    // Станции маршрута
-    func getThread(uid: String) async throws -> ThreadStationsResponse {
-        logRequest("getThread", parameters: ["uid": uid])
-        
-        do {
-            let response = try await client.getThreadStations(query: .init(
-                apikey: apikey,
-                uid: uid
-            ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let thread):
-                    logResponse("getThread", success: true, details: "Thread stations retrieved")
-                    return thread
-                @unknown default:
-                    logResponse("getThread", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getThread", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
-            }
-        } catch {
-            logResponse("getThread", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
-        }
-    }
-    
-    // Ближайший населенный пункт
-    func getNearestSettlement(lat: Double, lng: Double, distance: Int) async throws -> NearestSettlementResponse {
-        logRequest("getNearestSettlement", parameters: ["lat": lat, "lng": lng, "distance": distance])
-        
-        do {
-            let response = try await client.getNearestSettlement(query: .init(
-                apikey: apikey,
+
+    func getNearestStations(lat: Double, lng: Double, distance: Int = 50) async throws -> NearestStationsResponse {
+        logRequest("getNearestStations", parameters: ["lat": lat, "lng": lng, "distance": distance])
+        return try await handleOperation(name: "getNearestStations") { [self] in
+            let input = Ops.getNearestStations.Input(query: .init(
+                apikey: self.apiKey,
                 lat: lat,
                 lng: lng,
-                distance: distance
+                distance: distance,
+                limit: nil,
+                lang: nil,
+                format: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let settlement):
-                    logResponse("getNearestSettlement", success: true, details: "Settlement found")
-                    return settlement
-                @unknown default:
-                    logResponse("getNearestSettlement", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getNearestSettlement", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            let result = try await self.client.getNearestStations(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getNearestSettlement", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
     }
-    
-    // Список станций
+
+    func getNearestSettlement(lat: Double, lng: Double) async throws -> NearestSettlementResponse {
+        logRequest("getNearestSettlement", parameters: ["lat": lat, "lng": lng])
+        return try await handleOperation(name: "getNearestSettlement") { [self] in
+            let input = Ops.getNearestSettlement.Input(query: .init(
+                apikey: self.apiKey,
+                lat: lat,
+                lng: lng,
+                distance: nil,
+                lang: nil,
+                format: nil,
+                limit: nil
+            ))
+            let result = try await self.client.getNearestSettlement(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
+            }
+        }
+    }
+
     func getStationsList() async throws -> StationsListResponse {
+        let cacheKey = "stationsList"
+        if let cached: StationsListResponse = await cache.get(cacheKey, as: StationsListResponse.self) {
+            logResponse("getStationsList", success: true, details: "from cache")
+            return cached
+        }
+
         logRequest("getStationsList", parameters: [:])
-        
-        do {
-            let response = try await client.getStationsList(query: .init(
-                apikey: apikey
+        return try await handleOperation(name: "getStationsList") { [self] in
+            let input = Ops.getStationsList.Input(query: .init(
+                apikey: self.apiKey,
+                lang: nil,
+                format: nil,
+                limit: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let stations):
-                    logResponse("getStationsList", success: true, details: "Stations list retrieved")
-                    return stations
-                @unknown default:
-                    logResponse("getStationsList", success: false, details: "Unexpected response format")
+            let result = try await self.client.getStationsList(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body {
+                    await self.cache.set(cacheKey, value: model, ttl: 6 * 3600)
+                    return model
+                } else {
                     throw APIError.invalidResponse
                 }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getStationsList", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getStationsList", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
     }
-    
-    // Информация о перевозчике
-    func getCarrier(code: String) async throws -> CarrierInfoResponse {
-        logRequest("getCarrier", parameters: ["code": code])
-        
-        do {
-            let response = try await client.getCarrierInfo(query: .init(
-                apikey: apikey,
-                code: code
+
+    func getCarrierInfo(code: String) async throws -> CarrierInfoResponse {
+        logRequest("getCarrierInfo", parameters: ["code": code])
+        return try await handleOperation(name: "getCarrierInfo") { [self] in
+            let input = Ops.getCarrierInfo.Input(query: .init(
+                apikey: self.apiKey,
+                code: code,
+                lang: nil,
+                format: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let carrier):
-                    logResponse("getCarrier", success: true, details: "Carrier info retrieved")
-                    return carrier
-                @unknown default:
-                    logResponse("getCarrier", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getCarrier", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            let result = try await self.client.getCarrierInfo(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getCarrier", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
     }
-    
-    // Информация о правах
-    func getCopyright() async throws -> CopyrightResponse {
-        logRequest("getCopyright", parameters: [:])
-        
-        do {
-            let response = try await client.getCopyrightInfo(query: .init(
-                apikey: apikey
+
+    func getCopyrightInfo() async throws -> CopyrightResponse {
+        logRequest("getCopyrightInfo", parameters: [:])
+        return try await handleOperation(name: "getCopyrightInfo") { [self] in
+            let input = Ops.getCopyrightInfo.Input(query: .init(
+                apikey: self.apiKey,
+                format: nil,
+                lang: nil
             ))
-            
-            switch response {
-            case .ok(let okResponse):
-                switch okResponse.body {
-                case .json(let copyright):
-                    logResponse("getCopyright", success: true, details: "Copyright info retrieved")
-                    return copyright
-                @unknown default:
-                    logResponse("getCopyright", success: false, details: "Unexpected response format")
-                    throw APIError.invalidResponse
-                }
-            case .undocumented(let statusCode, let payload):
-                let bodyText = await readResponseBody(payload.body)
-                logResponse("getCopyright", success: false, details: "Status: \(statusCode), Body: \(bodyText.prefix(500))")
-                throw APIError.invalidResponse
+            let result = try await self.client.getCopyrightInfo(input)
+            switch result {
+            case .ok(let ok):
+                if case let .json(model) = ok.body { return model }
+                else { throw APIError.invalidResponse }
+            case .undocumented(let statusCode, _):
+                throw self.mapStatusToError(statusCode)
             }
-        } catch {
-            logResponse("getCopyright", success: false, details: "Error: \(error.localizedDescription)")
-            throw error
         }
+    }
+}
+
+// MARK: - Simple Logger
+struct Logger {
+    func info(_ message: String) {
+        print("[YandexRasp] \(message)")
     }
 }

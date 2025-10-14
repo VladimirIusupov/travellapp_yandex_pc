@@ -19,7 +19,7 @@
 		E7F3F2802E7D866200162F6E /* Exceptions for "TravellApp" folder in "TravellApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Resources/components/parameters/common.yaml,
+				Resources/Archive/components/parameters/common.yaml,
 			);
 			target = E74646A42E5EFCF700CC3162 /* TravellApp */;
 		};
@@ -30,7 +30,7 @@
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			buildPhase = E74646A12E5EFCF700CC3162 /* Sources */;
 			membershipExceptions = (
-				Resources/components/parameters/common.yaml,
+				Resources/Archive/components/parameters/common.yaml,
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -90,7 +90,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				E7A8B7FA2E5F0516004594B3 /* PBXTargetDependency */,
+				E7CFAA2D2E9CD90B00E57EFE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E74646A72E5EFCF700CC3162 /* TravellApp */,
@@ -164,9 +164,9 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		E7A8B7FA2E5F0516004594B3 /* PBXTargetDependency */ = {
+		E7CFAA2D2E9CD90B00E57EFE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = E7A8B7F92E5F0516004594B3 /* OpenAPIGenerator */;
+			productRef = E7CFAA2C2E9CD90B00E57EFE /* OpenAPIGenerator */;
 		};
 /* End PBXTargetDependency section */
 
@@ -417,7 +417,7 @@
 			package = E74646BB2E5F031000CC3162 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
-		E7A8B7F92E5F0516004594B3 /* OpenAPIGenerator */ = {
+		E7CFAA2C2E9CD90B00E57EFE /* OpenAPIGenerator */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E7A8B7F42E5F0448004594B3 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
 			productName = "plugin:OpenAPIGenerator";
