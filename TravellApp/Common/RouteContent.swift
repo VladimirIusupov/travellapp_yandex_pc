@@ -76,22 +76,20 @@ struct RouteContent: View {
                 )
                 .padding(.horizontal)
 
-                // Кнопка «Найти» сразу под карточкой, отступ 16
+                // СРАЗУ под синей карточкой
                 if canSearch {
                     Button(action: onSearch) {
                         Text("Найти")
-                            .font(.headline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 160, height: 60) // ← фиксированный размер по макету
+                            .background(Color.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous)) // округление
+                            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
                     }
-                    .buttonStyle(.plain)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color.blue)
-                    )
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-                    .padding(.horizontal)
+                    .buttonStyle(.plain) // ← чтобы системный стиль не менял размеры
+                    .frame(maxWidth: .infinity) // центрируем по ширине экрана
+                    .padding(.top, 16)          // отступ от синей карточки = 16
                 }
 
                 Spacer(minLength: 24)

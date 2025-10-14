@@ -39,3 +39,14 @@ final class RouteViewModel: ObservableObject {
         to.stationTitle = title; to.stationCode = code
     }
 }
+
+
+extension RouteViewModel {
+    /// Код для запросов (в приоритете станция, иначе город)
+    var fromCodeForSearch: String? {
+        from.stationCode ?? from.cityCode
+    }
+    var toCodeForSearch: String? {
+        to.stationCode ?? to.cityCode
+    }
+}
