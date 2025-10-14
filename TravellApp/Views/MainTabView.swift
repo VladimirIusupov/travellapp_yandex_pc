@@ -3,9 +3,9 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
-            RouteView()                  
+            RouteView()
                 .tabItem {
-                    Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+                    Image(systemName: "arrow.up.message.fill") // ← новая иконка
                     Text("Маршрут")
                 }
 

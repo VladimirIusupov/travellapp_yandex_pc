@@ -8,14 +8,22 @@ struct RouteContent: View {
     let onTapTo: () -> Void
     let onSearch: () -> Void
 
+    // Константы под макет
+    private let inset: CGFloat = 16        // внутренние отступы синей области
+    private let blueCorner: CGFloat = 28
+    private let whiteCorner: CGFloat = 20
+    private let changeSize: CGFloat = 44
+    private let whiteHeight: CGFloat = 100 // высота белого блока
+    private let gap: CGFloat = 16          // зазор между белым блоком и кнопкой
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 16) {
                 Text("Откуда")
                     .font(.largeTitle).bold()
                     .padding(.horizontal)
 
-                // Сториз (горизонтальная лента карточек)
+                // Сториз
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(0..<6, id: \.self) { _ in
@@ -25,80 +33,91 @@ struct RouteContent: View {
                     .padding(.horizontal)
                 }
 
-                // Большая синяя карточка выбора направлений
-                ZStack {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(Color.blue)
-                        .frame(height: 180)
+                // Карточка выбора направлений
+                HStack(spacing: gap) {
+                    // Белая область ввода станций — фикс. 100pt
+                    VStack(spacing: 0) {
+                        Button(action: onTapFrom) { row(fromTitle) }
+                            .buttonStyle(.plain)
+                            .frame(height: whiteHeight / 2)
 
-                    HStack(spacing: 12) {
-                        VStack(spacing: 14) {
-                            VStack(spacing: 0) {
-                                Button(action: onTapFrom) { row(fromTitle) }.buttonStyle(.plain)
-                                Divider()
-                                Button(action: onTapTo)   { row(toTitle)   }.buttonStyle(.plain)
-                            }
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                            .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
-                            .padding(.leading, 20)
-                            .padding(.vertical, 20)
-                            .environment(\.colorScheme, .light)
-                        }
+                        Divider()
 
-                        // Кнопка обмена местами (по желанию — через Notification)
-                        Button {
-                            NotificationCenter.default.post(name: .init("swapRoutePlaces"), object: nil)
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.blue)
-                                .frame(width: 44, height: 44)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
-                        }
-                        .padding(.trailing, 16)
+                        Button(action: onTapTo) { row(toTitle) }
+                            .buttonStyle(.plain)
+                            .frame(height: whiteHeight / 2)
                     }
+                    .frame(height: whiteHeight)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: whiteCorner, style: .continuous))
+                    .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
+                    .environment(\.colorScheme, .light)
+
+                    // Кнопка смены маршрута (Change)
+                    Button {
+                        NotificationCenter.default.post(name: .init("changeRoute"), object: nil)
+                    } label: {
+                        Image(systemName: "arrow.2.squarepath")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.blue)
+                            .frame(width: changeSize, height: changeSize)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
+                    }
+                    .accessibilityLabel("Change")
                 }
+                // Внутренние 16 от синей области: слева/справа/сверху/снизу
+                .padding(.all, inset)
+                .background(
+                    RoundedRectangle(cornerRadius: blueCorner, style: .continuous)
+                        .fill(Color.blue) // поставьте AccentColor = #3772E7 в Assets для точного цвета
+                )
                 .padding(.horizontal)
-                .padding(.top, 8)
+
+                // Кнопка «Найти» сразу под карточкой, отступ 16
+                if canSearch {
+                    Button(action: onSearch) {
+                        Text("Найти")
+                            .font(.headline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                    }
+                    .buttonStyle(.plain)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color.blue)
+                    )
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+                    .padding(.horizontal)
+                }
 
                 Spacer(minLength: 24)
             }
             .padding(.top, 8)
         }
-        // Кнопка «Найти» у края экрана, появляется только когда выбраны обе станции
-        .safeAreaInset(edge: .bottom) {
-            if canSearch {
-                Button("Найти", action: onSearch)
-                    .buttonStyle(.borderedProminent)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
     }
 
-    // Строка внутри белого блока (плейсхолдер серый, выбранное — обычный)
+    // Ряд внутри белого блока
     private func row(_ text: String) -> some View {
         HStack {
             Text(text)
                 .foregroundStyle((text == "Откуда" || text == "Куда") ? .gray : .primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             Spacer()
         }
-        .padding()
+        .padding(.horizontal, 16)
         .contentShape(Rectangle())
     }
 }
 
 #Preview {
     RouteContent(
-        fromTitle: "Откуда",
-        toTitle: "Куда",
+        fromTitle: "Москва (Курский вокзал)",
+        toTitle: "Санкт Петербург (Балтийский вокзал)",
         canSearch: true,
         onTapFrom: {},
         onTapTo: {},

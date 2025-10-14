@@ -9,9 +9,12 @@ struct ContentView: View {
     @StateObject private var appState = AppState()
     @StateObject private var splashVM = SplashViewModel()
 
-    // читаем глобальную настройку темы
-    @AppStorage("isDarkTheme") private var isDarkTheme: Bool = false
+    // Глобальные алерты и монитор сети
+    @StateObject private var appAlerts = AppAlerts()
+    @StateObject private var network = NetworkMonitor()
 
+    // API-клиент (адаптер поверх сгенерированного)
+    private let api = SchedulesAPIClient()
     var body: some View {
         ZStack {
             switch appState.phase {
@@ -23,15 +26,28 @@ struct ContentView: View {
                             appState.phase = .tabs
                         }
                     }
-                    .transition(.opacity)
             case .tabs:
                 MainTabView()
-                    .transition(.opacity)
+                    .environmentObject(appAlerts)
+                    .environmentObject(network)
+                    .environment(\.schedulesAPI, api)
             }
         }
-        // применяем тему ко всему приложению
-        .preferredColorScheme(isDarkTheme ? .dark : .light)
+        // Глобальный показ «Нет интернета»
+        .sheet(isPresented: $appAlerts.showNoInternet) {
+            NoInternetView()                    
+        }
+        // Глобальный показ «Ошибка сервера»
+        .sheet(isPresented: $appAlerts.showServerError) {
+            ServerErrorView()
+        }
+        .environmentObject(appAlerts)
+        // Сообщаем API где искать AppAlerts (для репортинга ошибок)
+        .onAppear {
+            _ = SchedulesAPIClient(appAlerts: appAlerts)
+        }
     }
 }
+
 
 #Preview { ContentView() }

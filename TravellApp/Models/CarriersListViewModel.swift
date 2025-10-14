@@ -26,12 +26,22 @@ final class CarriersListViewModel: ObservableObject {
     // В заголовке показываем «Москва (Ярославский) → Санкт-Петербург (Балтийский)»
     @Published var titleFrom: String = ""
     @Published var titleTo: String = ""
+    
+    private let api: SchedulesAPI
 
-    init(titleFrom: String, titleTo: String) {
+    init(titleFrom: String, titleTo: String, api: SchedulesAPI = SchedulesAPIClient()) {
         self.titleFrom = titleFrom
         self.titleTo = titleTo
-        loadMock()
-        applyFilter()
+        self.api = api
+    }
+    
+    @MainActor
+    func reload(fromCode: String, toCode: String) async {
+        do {
+            let items = try await api.carriers(from: fromCode, to: toCode, filter: filter)
+            self.all = items
+            applyFilter()
+        } catch { }
     }
 
     func updateFilter(_ new: CarriersFilter) {
