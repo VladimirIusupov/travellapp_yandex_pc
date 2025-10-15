@@ -9,15 +9,13 @@ struct CarriersListView: View {
         ZStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Заголовок: крупный, многострочный
+                    // Заголовок маршрута — 24 pt
                     Text(titleText)
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .multilineTextAlignment(.leading)
-                        .lineSpacing(2)
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
 
-                    // Список карточек
                     if viewModel.filtered.isEmpty {
                         Text("Вариантов нет")
                             .foregroundStyle(.secondary)
@@ -35,34 +33,27 @@ struct CarriersListView: View {
                         }
                     }
 
-                    Spacer(minLength: 120) // запас под нижнюю кнопку
+                    Spacer(minLength: 120)
                 }
             }
 
-            // Спиннер при первой загрузке
             if !viewModel.didLoadOnce && viewModel.filtered.isEmpty {
                 ProgressView().scaleEffect(1.15)
             }
         }
-        // Загружаем данные один раз при заходе на экран
         .task { await viewModel.ensureLoaded() }
-
-        // Нижняя кнопка «Уточнить время» — как в макете
         .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 0) {
-                Button(action: onOpenFilters) {
-                    Text("Уточнить время")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                }
-                .buttonStyle(.borderedProminent)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .shadow(color: Color.black.opacity(0.12), radius: 12, y: 6)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+            Button(action: onOpenFilters) {
+                Text("Уточнить время")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
             }
-            .background(.clear)
+            .buttonStyle(.borderedProminent)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: Color.black.opacity(0.12), radius: 12, y: 6)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -74,7 +65,7 @@ struct CarriersListView: View {
     }
 }
 
-// MARK: - Карточка перевозчика
+// MARK: - Карточка
 
 private struct CarrierCard: View {
     let item: CarrierItem
@@ -85,46 +76,45 @@ private struct CarrierCard: View {
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 16) {
-                // Верхняя строка: логотип + название + (справа) дата
-                HStack(alignment: .top, spacing: 12) {
+                // Верхний ряд
+                HStack(alignment: .center, spacing: 12) {
                     logo
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    // Текстовый блок фиксированной высоты, чтобы центрироваться по логотипу
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(item.name)
-                            .font(.headline)
+                            .font(.system(size: 17, weight: .regular)) // Regular 17
                             .foregroundStyle(.primary)
 
                         if let subtitle = item.subtitle, !subtitle.isEmpty {
                             Text(subtitle)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.red) // по макету
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundStyle(Color.red)
                         }
                     }
+                    .frame(height: 56, alignment: item.subtitle?.isEmpty == false ? .top : .center) // центр, если подзаголовка нет
 
                     Spacer(minLength: 8)
 
-                    // Справа дата (если появится в модели — см. itemDateRight)
                     if let date = itemDateRight {
                         Text(date)
-                            .font(.subheadline)
+                            .font(.system(size: 12, weight: .regular)) // Regular 12
                             .foregroundStyle(.secondary)
-                            .padding(.top, 2)
                     }
                 }
 
-                // Нижняя «временная» строка с разделителями
+                // Таймлайн: Regular 17 / 12
                 timeline(dep: item.depTime, duration: item.duration, arr: item.arrTime)
             }
             .padding(16)
             .background(cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous)) // ← 24
             .shadow(color: (scheme == .light ? .black.opacity(0.08) : .black.opacity(0.55)),
                     radius: (scheme == .light ? 6 : 10), y: 2)
         }
         .buttonStyle(.plain)
     }
 
-    // Логотип внутри светлого прямоугольника с большим скруглением
     private var logo: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -139,38 +129,34 @@ private struct CarrierCard: View {
         .accessibilityHidden(true)
     }
 
-    // Светлая карточная подложка (в тёмной теме остаётся светлой)
     private var cardBackground: some View {
-        let bg = Color(uiColor: .secondarySystemBackground)
-        return RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(bg)
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .fill(Color(uiColor: .secondarySystemBackground))
     }
 
-    // Поддержка даты справа (если добавишь её в CarrierItem как `dateText: String?`)
+    // Подключишь поле даты — верни его здесь
     private var itemDateRight: String? {
-        // верни item.dateText, когда поле появится в модели
         nil
     }
 
-    // Разметка нижней строки
     private func timeline(dep: String, duration: String, arr: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Text(dep)
-                .font(.system(size: 22, weight: .semibold))
+                .font(.system(size: 17, weight: .regular))  // Regular 17
                 .foregroundStyle(.primary)
                 .fixedSize()
 
             line
 
             Text(duration)
-                .font(.subheadline.weight(.semibold))
+                .font(.system(size: 12, weight: .regular))  // Regular 12
                 .foregroundStyle(.secondary)
                 .fixedSize()
 
             line
 
             Text(arr)
-                .font(.system(size: 22, weight: .semibold))
+                .font(.system(size: 17, weight: .regular))  // Regular 17
                 .foregroundStyle(.primary)
                 .fixedSize()
         }

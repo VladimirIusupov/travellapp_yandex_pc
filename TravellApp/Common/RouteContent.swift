@@ -56,7 +56,7 @@ struct RouteContent: View {
 
                     // Кнопка смены маршрута (Change)
                     Button {
-                        NotificationCenter.default.post(name: .init("changeRoute"), object: nil)
+                        NotificationCenter.default.post(name: .init("swapRoutePlaces"), object: nil)
                     } label: {
                         Image(systemName: "arrow.2.squarepath")
                             .font(.system(size: 24, weight: .semibold))
@@ -82,14 +82,14 @@ struct RouteContent: View {
                         Text("Найти")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.white)
-                            .frame(width: 160, height: 60) // ← фиксированный размер по макету
+                            .frame(width: 160, height: 60)
                             .background(Color.blue)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous)) // округление
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)) // ← 16
                             .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
                     }
-                    .buttonStyle(.plain) // ← чтобы системный стиль не менял размеры
-                    .frame(maxWidth: .infinity) // центрируем по ширине экрана
-                    .padding(.top, 16)          // отступ от синей карточки = 16
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity) // центрируем по экрану
+                    .padding(.top, 16)          // ← ЯВНО 16 от карточки
                 }
 
                 Spacer(minLength: 24)

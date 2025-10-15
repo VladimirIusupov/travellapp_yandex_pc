@@ -66,20 +66,16 @@ struct RouteView: View {
                 canSearch: viewModel.canSearch,
                 onTapFrom: { showFromFlow = true },      // полноэкранно
                 onTapTo:   { showToFlow = true },        // полноэкранно
-                onSearch:  {
-                    // RouteView.swift (внутри RouteContent(...) onSearch:)
+                onSearch: {
                     carriersVM.titleFrom = viewModel.from.displayTitle ?? ""
                     carriersVM.titleTo   = viewModel.to.displayTitle   ?? ""
 
-                    // берём код станции, если есть, иначе код города
                     let fromCode = viewModel.fromCodeForSearch ?? ""
                     let toCode   = viewModel.toCodeForSearch   ?? ""
 
-                    // передаём коды и переходим на список перевозчиков
                     carriersVM.configureRoute(fromCode: fromCode, toCode: toCode)
                     path.append(.carriers)
-                    path.append(.carriers) // загрузка пойдёт внутри экрана списка
-                },
+                }
             )
             .navigationDestination(for: RouteNav.self) { dest in
                 switch dest {
