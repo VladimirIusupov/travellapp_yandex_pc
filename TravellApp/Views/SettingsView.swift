@@ -23,7 +23,6 @@ struct SettingsView: View {
                         HStack {
                             Text("Пользовательское соглашение")
                             Spacer()
-                            Image(systemName: "chevron.right")
                                 .font(.footnote)
                                 .foregroundStyle(.tertiary)
                         }
@@ -44,5 +43,3 @@ struct SettingsView: View {
         }
     }
 }
-
-#Preview { SettingsView() }

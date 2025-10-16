@@ -28,17 +28,3 @@ struct StationSelectView: View {
     }
 }
 
-#Preview {
-    StationSelectView(
-        viewModel: .init(
-            cityTitle: "Москва",
-            stations: [
-                .init(id: "s1", title: "Ленинградский вокзал"),
-                .init(id: "s2", title: "Казанский вокзал"),
-                .init(id: "s3", title: "Курский вокзал")
-            ]
-        ),
-        onPick: { _ in }
-    )
-}
-

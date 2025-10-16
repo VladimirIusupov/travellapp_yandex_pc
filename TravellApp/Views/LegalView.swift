@@ -34,5 +34,3 @@ struct LegalView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview { NavigationStack { LegalView() } }

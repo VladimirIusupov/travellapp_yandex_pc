@@ -33,17 +33,3 @@ struct StationPickerView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview {
-    NavigationStack {
-        StationPickerView(
-            cityTitle: "Москва",
-            viewModel: .init(stations: [
-                .init(id: "kiev", title: "Киевский вокзал"),
-                .init(id: "kursk", title: "Курский вокзал"),
-                .init(id: "yar", title: "Ярославский вокзал")
-            ]),
-            onPick: { _ in }
-        )
-    }
-}

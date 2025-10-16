@@ -23,8 +23,3 @@ struct ServerErrorView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview {
-    ServerErrorView()
-        .preferredColorScheme(.light)
-}

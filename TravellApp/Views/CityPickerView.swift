@@ -43,19 +43,3 @@ struct CityPickerView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview {
-    NavigationStack {
-        CityPickerView(
-            viewModel: .init(cities: [
-                .init(id: "msk", title: "Москва"),
-                .init(id: "spb", title: "Санкт Петербург"),
-                .init(id: "sochi", title: "Сочи"),
-                .init(id: "kras", title: "Краснодар"),
-                .init(id: "kzn", title: "Казань"),
-                .init(id: "omsk", title: "Омск")
-            ]),
-            onPick: { _ in }
-        )
-    }
-}

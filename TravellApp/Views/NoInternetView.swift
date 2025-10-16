@@ -22,8 +22,3 @@ struct NoInternetView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-#Preview {
-    NoInternetView()
-        .preferredColorScheme(.light)
-}

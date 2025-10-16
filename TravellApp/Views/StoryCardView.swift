@@ -34,6 +34,3 @@ struct StoryCardView: View {
         .frame(width: 120, height: 170)
     }
 }
-
-#Preview { StoryCardView(imageName: nil, title: "Text Text\nText Text T…") }
-

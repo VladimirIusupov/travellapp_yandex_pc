@@ -24,8 +24,3 @@ struct SplashView: View {
         .task { await viewModel.onAppear() }
     }
 }
-
-#Preview {
-    SplashView(viewModel: .init())
-        .environment(\.colorScheme, .dark) // проверка тёмной темы
-}

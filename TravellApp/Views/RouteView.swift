@@ -129,7 +129,3 @@ struct RouteView: View {
         }
     }
 }
-
-#Preview {
-    RouteView()
-}
