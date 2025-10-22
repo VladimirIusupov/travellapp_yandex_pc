@@ -5,7 +5,6 @@ struct SplashView: View {
 
     var body: some View {
         ZStack {
-            // 1) Полноэкранная картинка (из ассетов) строго «как в макете»
             Image("logo") // добавь PNG в Assets с именем "splash"
                 .resizable()
                 .scaledToFill()
@@ -19,7 +18,6 @@ struct SplashView: View {
                     .tint(.white.opacity(0.9))
             }
         }
-        // В сплэше статус-бар, как правило, скрыт
         .statusBarHidden(true)
         .task { await viewModel.onAppear() }
     }

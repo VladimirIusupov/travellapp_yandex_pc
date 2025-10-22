@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct ServerErrorView: View {
+    var message: String = ""               
+    var onRetry: (() -> Void)? = nil
+
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
-
             VStack(spacing: 24) {
                 Image("img_server_error")
                     .resizable()
@@ -15,11 +17,15 @@ struct ServerErrorView: View {
 
                 Text("Ошибка сервера")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(.primary)
+
+                if !message.isEmpty {
+                    Text(message)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
             }
-            .padding(.horizontal, 24)
         }
-        // чтобы выглядело как обычный экран
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

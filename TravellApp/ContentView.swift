@@ -2,52 +2,31 @@ import SwiftUI
 
 final class AppState: ObservableObject {
     enum Phase { case splash, tabs }
-    @Published var phase: Phase = .splash
+    @Published var phase: Phase = .tabs
 }
 
 struct ContentView: View {
-    @StateObject private var appState = AppState()
-    @StateObject private var splashVM = SplashViewModel()
+    @StateObject private var appState   = AppState()
+    @StateObject private var theme      = ThemeManager()
+    @StateObject private var appAlerts  = AppAlerts()
 
-    // Глобальные алерты и монитор сети
-    @StateObject private var appAlerts = AppAlerts()
-    @StateObject private var network = NetworkMonitor()
-
-    // API-клиент (адаптер поверх сгенерированного)
-    private let api = SchedulesAPIClient()
     var body: some View {
-        ZStack {
+        Group {
             switch appState.phase {
-            case .splash:
-                SplashView(viewModel: splashVM)
-                    .onReceive(splashVM.$didFinish) { finished in
-                        guard finished else { return }
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            appState.phase = .tabs
-                        }
-                    }
             case .tabs:
-                MainTabView()
+                MainTabView()                       
+                    .environmentObject(theme)       // <— пробрасываем тему
                     .environmentObject(appAlerts)
-                    .environmentObject(network)
-                    .environment(\.schedulesAPI, api)
+            case .splash:
+                SplashView(viewModel: .init())
             }
         }
-        // Глобальный показ «Нет интернета»
-        .sheet(isPresented: $appAlerts.showNoInternet) {
-            NoInternetView()                    
-        }
-        // Глобальный показ «Ошибка сервера»
+        .preferredColorScheme(theme.isDarkTheme ? .dark : .light) // <— только по свитчу
+        // sheets для ошибок (если используешь AppAlerts)
+        .sheet(isPresented: $appAlerts.showNoInternet) { NoInternetView() }
         .sheet(isPresented: $appAlerts.showServerError) {
-            ServerErrorView()
+            ServerErrorView(message: appAlerts.serverErrorMessage)
         }
-        .environmentObject(appAlerts)
-        // Сообщаем API где искать AppAlerts (для репортинга ошибок)
-        .onAppear {
-            _ = SchedulesAPIClient(appAlerts: appAlerts)
-        }
+        .onAppear { _ = SchedulesAPIClient(appAlerts: appAlerts) }
     }
 }
-
-
-#Preview { ContentView() }

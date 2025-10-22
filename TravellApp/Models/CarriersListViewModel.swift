@@ -48,7 +48,7 @@ public struct CarriersFilter: Equatable {
 }
 
 // ВАЖНО: НЕ объявляй здесь протокол SchedulesAPI — он уже есть в Environment+API.swift
-// public protocol SchedulesAPI { ... }  <-- удалить/не добавлять!
+// public protocol SchedulesAPI { ... }
 
 // MARK: - ViewModel списка перевозчиков
 

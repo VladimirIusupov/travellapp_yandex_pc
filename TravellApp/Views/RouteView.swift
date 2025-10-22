@@ -21,8 +21,13 @@ struct RouteView: View {
 
     // VM списка перевозчиков храним в родителе, чтобы не терять состояние при пушах
     @StateObject private var carriersVM = CarriersListViewModel(titleFrom: "", titleTo: "")
-
-    // --- МОК-ДАННЫЕ (заменишь на индекс/АПИ) ---
+    
+    // Stories
+    @State private var showStories = false
+    @State private var storyIndex = 0
+    private let stories = Story.mock
+    
+    //:TODO МОК-ДАННЫЕ
     private var mockCities: [CityRow] {
         [
             .init(id: "msk",  title: "Москва"),
@@ -64,9 +69,9 @@ struct RouteView: View {
                 fromTitle: viewModel.from.displayTitle ?? "Откуда",
                 toTitle:   viewModel.to.displayTitle   ?? "Куда",
                 canSearch: viewModel.canSearch,
-                onTapFrom: { showFromFlow = true },      // полноэкранно
-                onTapTo:   { showToFlow = true },        // полноэкранно
-                onSearch: {
+                onTapFrom: { showFromFlow = true },
+                onTapTo:   { showToFlow   = true },
+                onSearch:  {
                     carriersVM.titleFrom = viewModel.from.displayTitle ?? ""
                     carriersVM.titleTo   = viewModel.to.displayTitle   ?? ""
 
@@ -74,9 +79,15 @@ struct RouteView: View {
                     let toCode   = viewModel.toCodeForSearch   ?? ""
 
                     carriersVM.configureRoute(fromCode: fromCode, toCode: toCode)
-                    path.append(.carriers)
+                    path.append(.carriers) // <— один раз!
+                },
+                stories: stories,                      // ← ВАЖНА ЗАПЯТАЯ ПОСЛЕ onSearch
+                onOpenStory: { idx in
+                    storyIndex  = idx
+                    showStories = true
                 }
             )
+
             .navigationDestination(for: RouteNav.self) { dest in
                 switch dest {
                 case .carriers:
@@ -98,6 +109,9 @@ struct RouteView: View {
                 case let .carrierDetails(item):
                     CarrierDetailsView(item: item)
                 }
+            }
+            .fullScreenCover(isPresented: $showStories) {
+                StoryPlayerView(stories: stories, startIndex: storyIndex) { showStories = false }
             }
         }
         // Полноэкранные флоу выбора города → станции (перекрывают TabBar)

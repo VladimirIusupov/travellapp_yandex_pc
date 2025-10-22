@@ -1,45 +1,53 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @ObservedObject var viewModel: SettingsViewModel
-
-    // ✅ Удобный init по умолчанию
-    init(viewModel: SettingsViewModel = SettingsViewModel()) {
-        self._viewModel = ObservedObject(wrappedValue: viewModel)
-    }
+    @EnvironmentObject private var theme: ThemeManager
+    @State private var showAgreement = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Toggle(isOn: $viewModel.isDarkTheme) {
+                    Toggle(isOn: $theme.isDarkTheme) {
                         Text("Тёмная тема")
                     }
                 }
+
                 Section {
-                    NavigationLink {
-                        LegalView()
+                    Button {
+                        showAgreement = true
                     } label: {
                         HStack {
                             Text("Пользовательское соглашение")
                             Spacer()
+                            Image(systemName: "chevron.right")
                                 .font(.footnote)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
+
+                Section(footer: footer) { EmptyView() }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Настройки")
-            .safeAreaInset(edge: .bottom) {
-                VStack(spacing: 4) {
-                    Text("Приложение использует API «Яндекс.Расписания»")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-            }
         }
+        // оферта — полноэкранно, перекрывает TabBar
+        .fullScreenCover(isPresented: $showAgreement) {
+            AgreementWebView(urlString: "https://yandex.ru/legal/practicum_offer")
+        }
+    }
+
+    private var footer: some View {
+        VStack(spacing: 8) {
+            Text("Приложение использует API «Яндекс.Расписания»")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text("Версия 1.0 (beta)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.vertical, 8)
     }
 }

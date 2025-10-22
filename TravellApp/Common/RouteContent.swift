@@ -1,12 +1,17 @@
 import SwiftUI
 
 struct RouteContent: View {
+    // Параметры экрана
     let fromTitle: String
     let toTitle: String
     let canSearch: Bool
     let onTapFrom: () -> Void
     let onTapTo: () -> Void
     let onSearch: () -> Void
+
+    // NEW: Stories
+    let stories: [Story]
+    let onOpenStory: (_ index: Int) -> Void
 
     // Константы под макет
     private let inset: CGFloat = 16        // внутренние отступы синей области
@@ -23,15 +28,8 @@ struct RouteContent: View {
                     .font(.largeTitle).bold()
                     .padding(.horizontal)
 
-                // Сториз
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        ForEach(0..<6, id: \.self) { _ in
-                            StoryCardView(imageName: nil, title: "Text Text\nText Text T…")
-                        }
-                    }
-                    .padding(.horizontal)
-                }
+                // Сториз (горизонтальная лента)
+                StoriesStripView(stories: stories, onOpen: onOpenStory)
 
                 // Карточка выбора направлений
                 HStack(spacing: gap) {
@@ -52,9 +50,9 @@ struct RouteContent: View {
                     .background(Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: whiteCorner, style: .continuous))
                     .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
-                    .environment(\.colorScheme, .light)
+                    .environment(\.colorScheme, .light) // читаемый текст в тёмной теме
 
-                    // Кнопка смены маршрута (Change)
+                    // Кнопка смены маршрута
                     Button {
                         NotificationCenter.default.post(name: .init("swapRoutePlaces"), object: nil)
                     } label: {
@@ -68,11 +66,10 @@ struct RouteContent: View {
                     }
                     .accessibilityLabel("Change")
                 }
-                // Внутренние 16 от синей области: слева/справа/сверху/снизу
-                .padding(.all, inset)
+                .padding(.all, inset) // внутренние 16 от синей области
                 .background(
                     RoundedRectangle(cornerRadius: blueCorner, style: .continuous)
-                        .fill(Color.blue) // поставьте AccentColor = #3772E7 в Assets для точного цвета
+                        .fill(Color.blue)
                 )
                 .padding(.horizontal)
 
@@ -84,12 +81,12 @@ struct RouteContent: View {
                             .foregroundColor(.white)
                             .frame(width: 160, height: 60)
                             .background(Color.blue)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)) // ← 16
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
                     }
                     .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity) // центрируем по экрану
-                    .padding(.top, 16)          // ← ЯВНО 16 от карточки
+                    .frame(maxWidth: .infinity) // центрируем по ширине
+                    .padding(.top, 16)          // отступ от синей карточки = 16
                 }
 
                 Spacer(minLength: 24)
@@ -110,15 +107,4 @@ struct RouteContent: View {
         .padding(.horizontal, 16)
         .contentShape(Rectangle())
     }
-}
-
-#Preview {
-    RouteContent(
-        fromTitle: "Москва (Курский вокзал)",
-        toTitle: "Санкт Петербург (Балтийский вокзал)",
-        canSearch: true,
-        onTapFrom: {},
-        onTapTo: {},
-        onSearch: {}
-    )
 }
