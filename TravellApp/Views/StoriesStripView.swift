@@ -4,17 +4,18 @@ struct StoriesStripView: View {
     let stories: [Story]
     let onOpen: (Int) -> Void
 
-    @StateObject private var store = StoryStore()
+    @ObservedObject var store: StoryStore
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
                 ForEach(Array(stories.enumerated()), id: \.1.id) { idx, story in
-                    StoryItemView(
-                        story: story,
-                        isSeen: store.seen.contains(story.id)
-                    )
-                    .onTapGesture {
+                    StoryItemView(story: story, isSeen: store.seen.contains(story.id))
+                        .onTapGesture {
+                            onOpen(idx)
+                            store.markSeen(story.id)     // ← помечаем просмотренной
+                        }
+                        .onTapGesture {
                         onOpen(idx)                     // открыть с выбранной
                         store.markSeen(story.id)        // пометить просмотренной
                     }

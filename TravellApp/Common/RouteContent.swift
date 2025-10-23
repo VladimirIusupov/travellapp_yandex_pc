@@ -12,6 +12,8 @@ struct RouteContent: View {
     // NEW: Stories
     let stories: [Story]
     let onOpenStory: (_ index: Int) -> Void
+    let storyStore: StoryStore
+
 
     // Константы под макет
     private let inset: CGFloat = 16        // внутренние отступы синей области
@@ -29,7 +31,7 @@ struct RouteContent: View {
                     .padding(.horizontal)
 
                 // Сториз (горизонтальная лента)
-                StoriesStripView(stories: stories, onOpen: onOpenStory)
+                StoriesStripView(stories: stories, onOpen: onOpenStory, store: storyStore)
 
                 // Карточка выбора направлений
                 HStack(spacing: gap) {

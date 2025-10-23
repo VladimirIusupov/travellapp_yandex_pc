@@ -26,6 +26,8 @@ struct RouteView: View {
     @State private var showStories = false
     @State private var storyIndex = 0
     private let stories = Story.mock
+    @StateObject private var storyStore = StoryStore()
+
     
     //:TODO МОК-ДАННЫЕ
     private var mockCities: [CityRow] {
@@ -79,14 +81,17 @@ struct RouteView: View {
                     let toCode   = viewModel.toCodeForSearch   ?? ""
 
                     carriersVM.configureRoute(fromCode: fromCode, toCode: toCode)
-                    path.append(.carriers) // <— один раз!
+                    path.append(.carriers)                    // один раз!
                 },
-                stories: stories,                      // ← ВАЖНА ЗАПЯТАЯ ПОСЛЕ onSearch
-                onOpenStory: { idx in
+                stories: stories,                             // <-- массив сториз
+                onOpenStory: { idx in                         // <-- открытие плеера
                     storyIndex  = idx
                     showStories = true
-                }
+                    storyStore.markSeen(stories[idx].id)      // сразу помечаем просмотренной
+                },
+                storyStore: storyStore                        // <-- общий Store (ObservedObject)
             )
+
 
             .navigationDestination(for: RouteNav.self) { dest in
                 switch dest {
@@ -111,7 +116,16 @@ struct RouteView: View {
                 }
             }
             .fullScreenCover(isPresented: $showStories) {
-                StoryPlayerView(stories: stories, startIndex: storyIndex) { showStories = false }
+                StoryPlayerView(
+                    stories: stories,
+                    startIndex: storyIndex,
+                    onSeen: { i in
+                        storyStore.markSeen(stories[i].id)   // ← помечаем при авто/ручном переходе
+                    },
+                    onClose: {
+                        showStories = false
+                    }
+                )
             }
         }
         // Полноэкранные флоу выбора города → станции (перекрывают TabBar)
