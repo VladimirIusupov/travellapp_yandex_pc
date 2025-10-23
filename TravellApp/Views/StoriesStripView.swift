@@ -3,59 +3,63 @@ import SwiftUI
 struct StoriesStripView: View {
     let stories: [Story]
     let onOpen: (Int) -> Void
-
     @ObservedObject var store: StoryStore
+
+    // параметры макета с дефолтами под ТЗ
+    let itemSize: CGSize
+    let spacing: CGFloat
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
+            HStack(spacing: spacing) {
                 ForEach(Array(stories.enumerated()), id: \.1.id) { idx, story in
-                    StoryItemView(story: story, isSeen: store.seen.contains(story.id))
-                        .onTapGesture {
-                            onOpen(idx)
-                            store.markSeen(story.id)     // ← помечаем просмотренной
-                        }
-                        .onTapGesture {
-                        onOpen(idx)                     // открыть с выбранной
-                        store.markSeen(story.id)        // пометить просмотренной
+                    StoryItemView(
+                        story: story,
+                        isSeen: store.seen.contains(story.id),
+                        size: itemSize
+                    )
+                    .onTapGesture {
+                        onOpen(idx)
+                        store.markSeen(story.id)
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.trailing, 16) // чтобы крайняя карточка не «липла» к правому краю
         }
     }
+}
+
+private extension Color {
+    static let brandBlue = Color(red: 0x37/255, green: 0x72/255, blue: 0xE7/255) // #3772E7
 }
 
 private struct StoryItemView: View {
     let story: Story
     let isSeen: Bool
+    let size: CGSize
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             Image(story.imageName)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 132, height: 196)
+                .frame(width: size.width, height: size.height)
                 .clipped()
-                .opacity(isSeen ? 0.45 : 1.0)         // просмотренные тусклее
-                .overlay(alignment: .bottomLeading) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(story.title)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(3)
-                            .shadow(radius: 10)
-                    }
-                    .padding(10)
-                }
-                .background(Color.black)
+                .opacity(isSeen ? 0.45 : 1.0)
 
+            // Заголовок поверх
+            Text(story.title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(3)
+                .shadow(radius: 8)
+                .padding(8)
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(isSeen ? Color.clear : Color.blue, lineWidth: 6) // непросмотренные с синей обводкой
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(isSeen ? Color.clear : .brandBlue, lineWidth: 4) // 5) синяя обводка 4pt
         )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .frame(width: 132, height: 196)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .frame(width: size.width, height: size.height)
     }
 }

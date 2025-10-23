@@ -1,7 +1,11 @@
 import SwiftUI
 
+private extension Color {
+    static let brandBlue = Color(red: 0x37/255, green: 0x72/255, blue: 0xE7/255)
+}
+
 struct RouteContent: View {
-    // Параметры экрана
+    // Параметры
     let fromTitle: String
     let toTitle: String
     let canSearch: Bool
@@ -9,103 +13,122 @@ struct RouteContent: View {
     let onTapTo: () -> Void
     let onSearch: () -> Void
 
-    // NEW: Stories
+    // Stories
     let stories: [Story]
     let onOpenStory: (_ index: Int) -> Void
     let storyStore: StoryStore
 
+    // Константы макета
+    private let storiesLeftInset: CGFloat = 16
+    private let storiesTopSafe: CGFloat   = 24
+    private let storiesToSearch: CGFloat  = 44
+    private let storiesItemSize           = CGSize(width: 92, height: 140)
+    private let storiesSpacing: CGFloat   = 12
 
-    // Константы под макет
-    private let inset: CGFloat = 16        // внутренние отступы синей области
-    private let blueCorner: CGFloat = 28
-    private let whiteCorner: CGFloat = 20
-    private let changeSize: CGFloat = 44
-    private let whiteHeight: CGFloat = 100 // высота белого блока
-    private let gap: CGFloat = 16          // зазор между белым блоком и кнопкой
+    private let blueCorner: CGFloat   = 28
+    private let whiteCorner: CGFloat  = 20
+    private let innerInset: CGFloat   = 16
+    private let whiteHeight: CGFloat  = 96
+    private let changeDiameter: CGFloat = 36
+    private let changeTrailing: CGFloat = 16
+    private let changeVPadding: CGFloat = 46
+
+    private let findButtonSize = CGSize(width: 150, height: 60)
+    private let findButtonTop: CGFloat = 16
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Откуда")
-                    .font(.largeTitle).bold()
-                    .padding(.horizontal)
+            VStack(alignment: .leading, spacing: 0) {
 
-                // Сториз (горизонтальная лента)
-                StoriesStripView(stories: stories, onOpen: onOpenStory, store: storyStore)
-
-                // Карточка выбора направлений
-                HStack(spacing: gap) {
-                    // Белая область ввода станций — фикс. 100pt
-                    VStack(spacing: 0) {
-                        Button(action: onTapFrom) { row(fromTitle) }
-                            .buttonStyle(.plain)
-                            .frame(height: whiteHeight / 2)
-
-                        Divider()
-
-                        Button(action: onTapTo) { row(toTitle) }
-                            .buttonStyle(.plain)
-                            .frame(height: whiteHeight / 2)
-                    }
-                    .frame(height: whiteHeight)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: whiteCorner, style: .continuous))
-                    .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
-                    .environment(\.colorScheme, .light) // читаемый текст в тёмной теме
-
-                    // Кнопка смены маршрута
-                    Button {
-                        NotificationCenter.default.post(name: .init("swapRoutePlaces"), object: nil)
-                    } label: {
-                        Image(systemName: "arrow.2.squarepath")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(.blue)
-                            .frame(width: changeSize, height: changeSize)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
-                    }
-                    .accessibilityLabel("Change")
-                }
-                .padding(.all, inset) // внутренние 16 от синей области
-                .background(
-                    RoundedRectangle(cornerRadius: blueCorner, style: .continuous)
-                        .fill(Color.blue)
+                // ------ Stories ------
+                StoriesStripView(
+                    stories: stories,
+                    onOpen: onOpenStory,
+                    store: storyStore,
+                    itemSize: storiesItemSize,
+                    spacing: storiesSpacing
                 )
-                .padding(.horizontal)
+                .padding(.leading, storiesLeftInset)
+                .padding(.top, storiesTopSafe)
 
-                // СРАЗУ под синей карточкой
+                // ------ Поиск (синяя секция) ------
+                VStack(spacing: 0) {
+                    HStack(spacing: 16) {
+                        // Белый блок «Откуда / Куда»
+                        VStack(spacing: 0) {
+                            Button(action: onTapFrom) { row(text: fromTitle) }
+                                .buttonStyle(.plain)
+                                .frame(height: whiteHeight / 2)
+                            
+                            Divider()
+                            
+                            Button(action: onTapTo) { row(text: toTitle) }
+                                .buttonStyle(.plain)
+                                .frame(height: whiteHeight / 2)
+                        }
+                        .frame(height: whiteHeight)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: whiteCorner, style: .continuous))
+                        .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
+                        .environment(\.colorScheme, .light)
+                        // Кнопка смены маршрута
+                        Button {
+                            NotificationCenter.default.post(name: .init("swapRoutePlaces"), object: nil)
+                        } label: {
+                            Image(systemName: "arrow.2.squarepath")
+                                .symbolRenderingMode(.monochrome)
+                                .font(.system(size: 18, weight: .regular))
+                                .foregroundStyle(Color.brandBlue)
+                                .frame(width: 36, height: 36)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
+                        }
+                        .accessibilityLabel("Поменять местами")
+                    }
+                    .padding(.leading, innerInset)
+                    .padding(.trailing, changeTrailing)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: blueCorner, style: .continuous)
+                            .fill(Color.brandBlue)
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, storiesToSearch)
+                }
+                // ------ Кнопка «Найти» ------
                 if canSearch {
                     Button(action: onSearch) {
                         Text("Найти")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.white)
-                            .frame(width: 160, height: 60)
-                            .background(Color.blue)
+                            .frame(width: findButtonSize.width, height: findButtonSize.height)
+                            .background(Color.brandBlue)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
                     }
                     .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity) // центрируем по ширине
-                    .padding(.top, 16)          // отступ от синей карточки = 16
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, findButtonTop)
                 }
 
                 Spacer(minLength: 24)
             }
-            .padding(.top, 8)
         }
     }
 
-    // Ряд внутри белого блока
-    private func row(_ text: String) -> some View {
-        HStack {
+    private func row(text: String) -> some View {
+        HStack(spacing: 8) {
             Text(text)
+                .font(.system(size: 17, weight: .regular))
+                .kerning(-0.41/17.0)
                 .foregroundStyle((text == "Откуда" || text == "Куда") ? .gray : .primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-            Spacer()
+                .lineLimit(1)                 
+                .truncationMode(.tail)
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .contentShape(Rectangle())
     }
