@@ -29,7 +29,7 @@ struct CityStationFlowView: View {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    BackChevron { dismiss() }
+                    BackChevron()
                 }
             }
 

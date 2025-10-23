@@ -1,185 +1,189 @@
 import SwiftUI
 
-// MARK: - CarriersListView
-
 struct CarriersListView: View {
     @ObservedObject var viewModel: CarriersListViewModel
 
-    /// открыть фильтры
-    let onOpenFilters: () -> Void
-    /// открыть карточку перевозчика
-    let onOpenDetails: (CarrierItem) -> Void
+    // Навигационные действия
+    var onOpenFilters: () -> Void
+    var onOpenDetails: (CarrierItem) -> Void
 
-    @Environment(\.dismiss) private var dismiss
+    // MARK: - UI константы
+    private let screenPadding: CGFloat = 16
+    private let titleFont = Font.system(size: 24, weight: .bold) // по макету
+    private let bottomButtonHeight: CGFloat = 60
+    private let bottomButtonBottom: CGFloat = 58
 
-    private let blue = Color(hex: 0x3772E7)
+    // красная точка при активном фильтре
+    private var hasActiveFilters: Bool {
+        let f = viewModel.filter
+        return f.morning || f.day || f.evening || f.night || (f.withTransfers != nil)
+    }
 
     var body: some View {
-        ZStack {
-            // Основной контент
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Заголовок 24 Bold, многострочный
+                    // Заголовок
                     Text("\(viewModel.titleFrom) → \(viewModel.titleTo)")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(titleFont)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, screenPadding)
 
                     // Список карточек
-                    VStack(spacing: 16) {
+                    LazyVStack(spacing: 12) {
                         ForEach(viewModel.filtered) { item in
                             Button {
                                 onOpenDetails(item)
                             } label: {
-                                CarrierRow(item: item)
+                                CarrierCard(item: item)
                             }
                             .buttonStyle(.plain)
+                            .padding(.horizontal, screenPadding)
                         }
                     }
-                    .padding(.horizontal, 16)      // слева/справа по 16
-                    .padding(.bottom, 120)         // запас под плавающую кнопку
+                    .padding(.top, 0)
+                    .padding(.bottom, bottomButtonHeight + bottomButtonBottom + 12) // место под кнопку
                 }
             }
 
-            // Плавающая кнопка «Уточнить время»
+            // Кнопка «Уточнить время»
             VStack {
                 Spacer()
-                filterButton
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 58) // отступ от низа по макету
+                Button {
+                    onOpenFilters()
+                } label: {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(accentBlue)
+                        .frame(height: 60)
+                        .overlay {
+                            DotText(
+                                "Уточнить время",
+                                showDot: isFilterApplied(viewModel.filter),
+                                dotColor: (redNote)
+                            )
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                        }
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 58)
             }
+            .padding(.horizontal, screenPadding)
+            .padding(.bottom, bottomButtonBottom)
         }
+        // Скрываем TabBar на этом экране
+        .toolbar(.hidden, for: .tabBar)
+        // Кастомная кнопка «назад» без текста
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            // Кнопка «Назад» без текста, цвет сам адаптируется к теме
             ToolbarItem(placement: .navigationBarLeading) {
-                Button { dismiss() } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 17, weight: .semibold))
-                }
+                BackChevron()
             }
         }
-        .toolbar(.hidden, for: .tabBar) // скрыть TabBar на экране списка
-        .task { await viewModel.ensureLoaded() }
-    }
-
-    // MARK: Views
-
-    private var filterButton: some View {
-        Button {
-            onOpenFilters()
-        } label: {
-            HStack(spacing: 8) {
-                Spacer()
-                Text("Уточнить время")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-                if viewModel.filter.isActive {
-                    Circle()
-                        .fill(Color(hex: 0xF56B6C)) // индикатор активных фильтров
-                        .frame(width: 8, height: 8)
-                        .accessibilityHidden(true)
-                }
-                Spacer()
-            }
+        // Первая загрузка
+        .task {
+            await viewModel.ensureLoaded()
         }
-        .frame(height: 60)
-        .background(blue)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-        .buttonStyle(.plain)
     }
 }
 
-// MARK: - Ячейка перевозчика
-
-private struct CarrierRow: View {
+// MARK: - Карточка перевозчика (всегда «светлая»)
+private struct CarrierCard: View {
     let item: CarrierItem
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(alignment: .center, spacing: 12) {
-                // Логотип в «пилюле»
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.white)
-                    Image(systemName: item.logoSystemName)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Color(hex: 0xF44336)) // условный красный логотип
-                }
-                .frame(width: 48, height: 36)
+        HStack(alignment: .top, spacing: 12) {
+            // Лого
+            Image(systemName: item.logoSystemName)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundColor(Color(hex: 0xF56B6C))
+                .frame(width: 44, height: 44)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 4) {
+            // Тексты
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline) {
                     Text(item.name)
-                        .font(.system(size: 17, weight: .regular)) // Regular 17
-                        .foregroundStyle(.primary)
-
-                    if let subtitle = item.subtitle, !subtitle.isEmpty {
-                        Text(subtitle)
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Color(hex: 0xF56B6C))
-                    }
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundColor(.black)
+                    Spacer()
                 }
 
-                Spacer()
+                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundColor(Color(hex: 0xF56B6C))
+                        .lineLimit(1)
+                }
 
-                // (По макету может быть дата справа — опционально)
-            }
+                // Таймлайн
+                HStack(spacing: 12) {
+                    Text(item.depTime)
+                        .font(.system(size: 22, weight: .regular))
+                        .foregroundColor(.black)
 
-            // Таймлайн
-            HStack(alignment: .center, spacing: 12) {
-                Text(item.depTime)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(.primary)
+                    TimelineSeparator()
 
-                SeparatorLine()
+                    Text(item.duration) // тот же цвет, что у времени
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(.black)
 
-                Text(item.duration)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+                    TimelineSeparator()
 
-                SeparatorLine()
-
-                Text(item.arrTime)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(.primary)
+                    Text(item.arrTime)
+                        .font(.system(size: 22, weight: .regular))
+                        .foregroundColor(.black)
+                }
             }
         }
-        .frame(height: 104) // высота ячейки
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color(hex: 0xEEEEEE)) // фон карточки
-        )
+        .frame(height: 104, alignment: .center) // высота карточки
+        .padding(16)
+        .background(Color.white)                  // ВСЕГДА белая
+        .environment(\.colorScheme, .light)       // и «светлая» палитра внутри
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
     }
 }
 
-private struct SeparatorLine: View {
+private func isFilterApplied(_ f: CarriersFilter) -> Bool {
+    f.morning || f.day || f.evening || f.night || (f.withTransfers != nil)
+}
+
+private struct TimelineSeparator: View {
     var body: some View {
         Rectangle()
-            .fill(Color.primary.opacity(0.12))
+            .fill(Color.black.opacity(0.2))
             .frame(height: 1)
             .frame(maxWidth: .infinity)
     }
 }
 
-// MARK: - Вспомогательные расширения
+private struct DotText: View {
+    let text: String
+    let showDot: Bool
+    let dotColor: Color
 
-extension CarriersFilter {
-    /// Признак, что пользователь применил хотя бы один фильтр
-    var isActive: Bool {
-        morning || day || evening || night || withTransfers != nil
+    init(_ text: String, showDot: Bool, dotColor: Color) {
+        self.text = text
+        self.showDot = showDot
+        self.dotColor = dotColor
     }
-}
 
-extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        let r = Double((hex >> 16) & 0xff) / 255.0
-        let g = Double((hex >> 8)  & 0xff) / 255.0
-        let b = Double(hex & 0xff) / 255.0
-        self = Color(.sRGB, red: r, green: g, blue: b, opacity: alpha)
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Text(text)
+            if showDot {
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 8, height: 8)
+                    .offset(x: 12, y: 8)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 }

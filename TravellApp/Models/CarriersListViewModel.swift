@@ -89,7 +89,6 @@ final class CarriersListViewModel: ObservableObject {
 
     // MARK: - Загрузка данных
 
-    /// Загружает список перевозчиков. В случае ошибок SchedulesAPIClient сам показывает экраны ошибок.
     @MainActor
     func reload(fromCode: String, toCode: String) async {
         if useMocks {

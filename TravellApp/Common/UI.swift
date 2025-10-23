@@ -1,35 +1,30 @@
+
 import SwiftUI
 
-// Своя кнопка «Назад» для корневого экрана, чтобы не было второй стрелки
+// Кастомная кнопка «назад» без текста
 struct BackChevron: View {
-    var action: () -> Void
-    @Environment(\.colorScheme) private var scheme
-
-    init(action: @escaping () -> Void) { self.action = action }
-
+    @Environment(\.dismiss) private var dismiss
     var body: some View {
-        Button(action: action) {
+        Button { dismiss() } label: {
             Image(systemName: "chevron.left")
+                .imageScale(.large)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(scheme == .dark ? .white : Color(hex: "#1A1B22"))
-                .padding(8)
-                .background(.ultraThinMaterial, in: Circle())
+                .foregroundStyle(.primary)
         }
-        .accessibilityLabel("Назад")
+        .buttonStyle(.plain)
     }
 }
 
 // HEX → Color
 extension Color {
-    init(hex: String) {
-        var s = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        if s.hasPrefix("#") { s.removeFirst() }
-        var rgb: UInt64 = 0
-        Scanner(string: s).scanHexInt64(&rgb)
+    init(hex: UInt, alpha: Double = 1.0) {
         self.init(.sRGB,
-                  red:   Double((rgb & 0xFF0000) >> 16) / 255,
-                  green: Double((rgb & 0x00FF00) >> 8)  / 255,
-                  blue:  Double(rgb & 0x0000FF)        / 255,
-                  opacity: 1)
+                  red:   Double((hex >> 16) & 0xFF) / 255,
+                  green: Double((hex >> 8)  & 0xFF) / 255,
+                  blue:  Double( hex        & 0xFF) / 255,
+                  opacity: alpha)
     }
 }
+
+let accentBlue = Color(red: 0.22, green: 0.45, blue: 0.91)
+let redNote    = Color(red: 0.96, green: 0.42, blue: 0.42)
