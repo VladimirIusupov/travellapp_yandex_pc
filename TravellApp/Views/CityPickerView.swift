@@ -1,3 +1,4 @@
+// CityPickerView.swift
 import SwiftUI
 
 struct CityPickerView: View {
@@ -5,41 +6,37 @@ struct CityPickerView: View {
     let onPick: (CityRow) -> Void
 
     var body: some View {
-        List {
-            ForEach(viewModel.filtered) { city in
-                Button {
-                    onPick(city)
-                } label: {
-                    HStack {
-                        Text(city.title)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.footnote)
-                            .foregroundStyle(.tertiary)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.filtered) { city in
+                    Button {
+                        onPick(city)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(city.title)
+                                .font(.system(size: 17, weight: .regular))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .frame(height: 60)
+                        .padding(.horizontal, 16)
+                        .contentShape(Rectangle())
                     }
-                }
-                .buttonStyle(.plain)
-            }
-            .listRowSeparator(.visible)
-        }
-        .listStyle(.plain)
-        .safeAreaInset(edge: .top) {
-            SearchBar(placeholder: "Введите запрос", text: $viewModel.query)
-                .onChange(of: viewModel.query) { _ in viewModel.updateFilter() }
-        }
-        .overlay {
-            if viewModel.filtered.isEmpty && !viewModel.query.isEmpty {
-                VStack {
-                    Spacer(minLength: 120)
-                    Text("Город не найден")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
+                    .buttonStyle(.plain)
                 }
             }
         }
-        .navigationTitle("Выбор города")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color(.systemBackground))
+        .searchable(text: $viewModel.query,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Введите запрос")
+        .onChange(of: viewModel.query) { _ in
+            viewModel.updateFilter()
+        }
     }
 }

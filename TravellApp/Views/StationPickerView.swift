@@ -1,3 +1,4 @@
+// StationPickerView.swift
 import SwiftUI
 
 struct StationPickerView: View {
@@ -6,28 +7,37 @@ struct StationPickerView: View {
     let onPick: (StationRow) -> Void
 
     var body: some View {
-        List {
-            ForEach(viewModel.filtered) { station in
-                Button {
-                    onPick(station)
-                } label: {
-                    HStack {
-                        Text(station.title)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.footnote)
-                            .foregroundStyle(.tertiary)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.filtered) { station in
+                    Button {
+                        onPick(station)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(station.title)
+                                .font(.system(size: 17, weight: .regular))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .frame(height: 60)
+                        .padding(.horizontal, 16)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
-            .listRowSeparator(.visible)
         }
-        .listStyle(.plain)
-        .safeAreaInset(edge: .top) {
-            SearchBar(placeholder: "Введите запрос", text: $viewModel.query)
-                .onChange(of: viewModel.query) { _ in viewModel.updateFilter() }
+        .background(Color(.systemBackground))
+        .searchable(text: $viewModel.query,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Введите запрос")
+        .onChange(of: viewModel.query) { _ in
+            viewModel.updateFilter()
         }
         .navigationTitle("Выбор станции")
         .navigationBarTitleDisplayMode(.inline)

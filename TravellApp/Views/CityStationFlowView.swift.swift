@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CityStationFlowView: View {
     enum Mode { case from, to }
+
     let mode: Mode
     let initialCities: [CityRow]
     let stationsProvider: (CityRow) -> [StationRow]
@@ -16,6 +17,7 @@ struct CityStationFlowView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            // 1) Корневой экран выбора города
             CityPickerView(
                 viewModel: .init(cities: initialCities),
                 onPick: { city in
@@ -24,21 +26,28 @@ struct CityStationFlowView: View {
             )
             .navigationTitle("Выбор города")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button { dismiss() } label: { Image(systemName: "chevron.left") }
+                ToolbarItem(placement: .topBarLeading) {
+                    BackChevron { dismiss() }
                 }
             }
+
+            // 2) Экран выбора станции
             .navigationDestination(for: FlowDest.self) { dest in
                 switch dest {
                 case let .stations(city):
                     StationPickerView(
                         cityTitle: city.title,
-                        viewModel: .init(stations: stationsProvider(city))
-                    ) { st in
-                        onFinish(city, st)
-                        dismiss()
-                    }
+                        viewModel: .init(stations: stationsProvider(city)),
+                        onPick: { st in
+                            onFinish(city, st)
+                            dismiss()
+                        }
+                    )
+                    .navigationTitle("Выбор станции")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarBackButtonHidden(false)              
                 }
             }
         }
