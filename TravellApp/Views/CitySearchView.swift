@@ -6,7 +6,8 @@ struct CitySearchView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
-    // Временно статический список, позже подключим реальный индекс/АПИ
+    // MARK: Поиск по API в следующем спринте
+    // Временно статический список, позже подключим реальный АПИ
     @State private var allCities = ["Москва", "Санкт-Петербург", "Казань", "Екатеринбург", "Новосибирск", "Нижний Новгород"]
     
     var filtered: [String] {
@@ -20,7 +21,7 @@ struct CitySearchView: View {
             List {
                 ForEach(filtered, id: \.self) { city in
                     Button {
-                        onPick(city, UUID().uuidString) // пока генерим код
+                        onPick(city, UUID().uuidString)
                         dismiss()
                     } label: {
                         Text(city)

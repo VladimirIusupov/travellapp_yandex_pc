@@ -9,14 +9,9 @@ struct SettingsView: View {
     
     var body: some View {
         ZStack {
-            // Фон страницы из Assets (имеет варианты Light/Dark)
             Color("ypWhite").ignoresSafeArea()
-            
             VStack(spacing: 0) {
-                // Верхний отступ 24 от safe area
                 Color.clear.frame(height: 24)
-                
-                // Простой список без секций/разделителей/зазоров
                 List {
                     // Строка: Тёмная тема
                     HStack {
@@ -27,7 +22,7 @@ struct SettingsView: View {
                         Spacer(minLength: sideInset)
                         Toggle("", isOn: $theme.isDarkTheme)
                             .labelsHidden()
-                            .tint(Color("ypBlue")) // фирменный синий
+                            .tint(Color("ypBlue"))
                     }
                     .frame(height: rowHeight)
                     .listRowInsets(EdgeInsets(top: 0, leading: sideInset, bottom: 0, trailing: sideInset))
@@ -57,22 +52,20 @@ struct SettingsView: View {
                     .listRowBackground(Color("ypWhite"))
                 }
                 .listStyle(.plain)
-                .listRowSeparator(.hidden)     // без разделителей
-                .listSectionSpacing(0)         // без зазоров
+                .listRowSeparator(.hidden)
+                .listSectionSpacing(0)
                 .scrollContentBackground(.hidden)
                 .background(Color("ypWhite"))
             }
             // Футер снизу
             .safeAreaInset(edge: .bottom) {
                 footer
-                    .padding(.horizontal, sideInset) // слева/справа 16
-                    .padding(.bottom, 24)            // до таббара 24
+                    .padding(.horizontal, sideInset)
+                    .padding(.bottom, 24)
                     .background(Color("ypWhite"))
             }
         }
-        // Принудительно применяем выбранную тему ко всему экрану
         .preferredColorScheme(theme.isDarkTheme ? .dark : .light)
-        // Оферта — полноэкранно, перекрывает TabBar
         .fullScreenCover(isPresented: $showAgreement) {
             AgreementWebView(urlString: "https://yandex.ru/legal/practicum_offer")
                 .preferredColorScheme(theme.isDarkTheme ? .dark : .light)

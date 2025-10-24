@@ -5,7 +5,6 @@ struct StoriesStripView: View {
     let onOpen: (Int) -> Void
     @ObservedObject var store: StoryStore
 
-    // параметры макета с дефолтами под ТЗ
     let itemSize: CGSize
     let spacing: CGFloat
 
@@ -24,7 +23,7 @@ struct StoriesStripView: View {
                     }
                 }
             }
-            .padding(.trailing, 16) // чтобы крайняя карточка не «липла» к правому краю
+            .padding(.trailing, 16)
         }
     }
 }

@@ -10,8 +10,8 @@ public struct Story: Identifiable, Hashable {
 
 public extension Story {
     static let mock: [Story] = [
-        .init(imageName: "story1", title: "Text Text Text Text Text Text Text Text Text Text", subtitle: "TText Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text", duration: 5),
-        .init(imageName: "story2", title: "Text Text Text Text Text Text Text Text Text Text",       subtitle: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text",   duration: 5),
+        .init(imageName: "story1", title: "Text Text Text Text Text Text Text Text Text Text", subtitle: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text ", duration: 5),
+        .init(imageName: "story2", title: "Text Text Text Text Text Text Text Text Text Text",       subtitle: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text ",   duration: 5),
         .init(imageName: "story3", title: "Text Text",             subtitle: "Text Text…",            duration: 5),
         .init(imageName: "story4", title: "Text",                  subtitle: "Text…",                 duration: 5)
     ]

@@ -1,8 +1,5 @@
 import SwiftUI
 
-var pageBG: Color { Color("ypWhite") }
-
-
 // Кастомная кнопка «назад» без текста
 struct BackChevron: View {
     @Environment(\.dismiss) private var dismiss
