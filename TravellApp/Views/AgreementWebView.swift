@@ -10,9 +10,11 @@ struct AgreementWebView: View {
             WebContainer(urlString: urlString)
                 .navigationTitle("Пользовательское соглашение")
                 .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(true)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Закрыть") { dismiss() }
+                    ToolbarItem(placement: .topBarLeading) {
+                        BackChevron()
+                            .padding(.leading, -8)
                     }
                 }
         }

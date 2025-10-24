@@ -9,10 +9,10 @@ struct BackChevron: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 24, height: 24)               
-                .foregroundStyle(Color("ypBlack"))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .background(Color("ypWhite"))
         .accessibilityLabel("Назад")
     }
 }

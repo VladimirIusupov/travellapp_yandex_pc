@@ -1,27 +1,25 @@
 import SwiftUI
 
+// MARK: - CarriersListView
+
 struct CarriersListView: View {
     @ObservedObject var viewModel: CarriersListViewModel
     @EnvironmentObject private var theme: ThemeManager
-    // Навигационные действия
+
+    // Навигация
     var onOpenFilters: () -> Void
     var onOpenDetails: (CarrierItem) -> Void
-    
-    private var pageBackground: Color {
-        theme.isDarkTheme ? .black : Color(.ypWhite)
-    }
-    
-    // MARK: - UI константы
-    private let screenPadding: CGFloat = 16
-    private let titleFont = Font.system(size: 24, weight: .bold) // по макету
-    private let bottomButtonHeight: CGFloat = 60
-    private let bottomButtonBottom: CGFloat = 58
 
-    // красная точка при активном фильтре
-    private var hasActiveFilters: Bool {
-        let f = viewModel.filter
-        return f.morning || f.day || f.evening || f.night || (f.withTransfers != nil)
+    private enum UI {
+        static let side: CGFloat = 16
+        static let betweenCards: CGFloat = 8
+        static let titleTop: CGFloat = 8
+        static let titleFont = Font.system(size: 24, weight: .bold)
+        static let bottomBtnH: CGFloat = 60
+        static let bottomBtnBottom: CGFloat = 24
     }
+
+    private var pageBackground: Color { theme.isDarkTheme ? .black : Color(.ypWhite) }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -29,142 +27,190 @@ struct CarriersListView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // Заголовок
                     Text("\(viewModel.titleFrom) → \(viewModel.titleTo)")
-                        .font(titleFont)
+                        .font(UI.titleFont)
                         .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 8)
-                        .padding(.horizontal, screenPadding)
+                        .padding(.top, UI.titleTop)
+                        .padding(.horizontal, UI.side)
 
-                    // Список карточек
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.filtered) { item in
+                    // Карточки: 16 слева/справа, 8 между, 16 от заголовка
+                    LazyVStack(spacing: UI.betweenCards) {
+                        ForEach(Array(viewModel.filtered.enumerated()), id: \.element.id) { idx, item in
                             Button {
                                 onOpenDetails(item)
                             } label: {
-                                CarrierCard(item: item)
+                                CarrierCard(
+                                    item: item,
+                                    rightDate: mockDate(forIndex: idx) // временно, пока нет даты из API
+                                )
                             }
                             .buttonStyle(.plain)
-                            .padding(.horizontal, screenPadding)
+                            .padding(.horizontal, UI.side)
                         }
                     }
-                    .padding(.top, 0)
-                    .padding(.bottom, bottomButtonHeight + bottomButtonBottom + 12) // место под кнопку
+                    .padding(.bottom, UI.bottomBtnH + UI.bottomBtnBottom + 12) // место под кнопку
                 }
             }
+            .background(pageBackground)
 
             // Кнопка «Уточнить время»
-            VStack {
-                Spacer()
-                Button {
-                    onOpenFilters()
-                } label: {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.ypBlue)
-                        .frame(height: 60)
-                        .overlay {
-                            DotText(
-                                "Уточнить время",
+            Button(action: onOpenFilters) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.ypBlue)
+                    .frame(height: UI.bottomBtnH)
+                    .overlay {
+                        DotText("Уточнить время",
                                 showDot: isFilterApplied(viewModel.filter),
-                                dotColor: (.ypRed)
-                            )
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.white)
-                        }
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 58)
+                                dotColor: .ypRed)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                    }
             }
-            .padding(.horizontal, screenPadding)
-            .padding(.bottom, bottomButtonBottom)
+            .buttonStyle(.plain)
+            .padding(.horizontal, UI.side)
+            .padding(.bottom, UI.bottomBtnBottom)
         }
-        // Скрываем TabBar на этом экране
         .toolbar(.hidden, for: .tabBar)
-        // Кастомная кнопка «назад» без текста
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .topBarLeading) {
                 BackChevron()
+                    .padding(.leading, 8)
             }
         }
-        // Первая загрузка
-        .task {
-            await viewModel.ensureLoaded()
-        }
+        .task { await viewModel.ensureLoaded() }
+    }
+
+    // Простой мок-дата справа (замените на реальную, когда появится)
+    private func mockDate(forIndex i: Int) -> String {
+        let day = 14 + (i % 3) // 14/15/16 января для демонстрации
+        return "\(day) января"
     }
 }
 
-// MARK: - Карточка перевозчика (всегда «светлая»)
 private struct CarrierCard: View {
     let item: CarrierItem
+    var rightDate: String? = nil
+
+    // UI
+    private enum UI {
+        static let height: CGFloat = 104
+        static let corner: CGFloat = 28
+
+        static let logoSide: CGFloat = 44
+        static let logoPad: CGFloat = 14           // левый/верхний отступ логотипа
+
+        static let headerLeft: CGFloat = logoPad + logoSide + 12
+        static let headerTop: CGFloat = 14
+
+        static let tlSide: CGFloat = 14            // таймлайн: слева/справа 14
+        static let tlBottom: CGFloat = 14          // таймлайн: снизу 14
+
+        static let lineWidth: CGFloat = 1
+        static let lineOpacity: CGFloat = 0.3
+    }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Лого
-            Image(systemName: item.logoSystemName)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundColor(Color(.ypWhiteUniversal))
-                .frame(width: 44, height: 44)
+        let hasSubtitle = (item.subtitle?.isEmpty == false)
+        let titleSubtitleSpacing: CGFloat = hasSubtitle ? 6 : 0
+        // Подстраиваем «воздух» над таймлайном в зависимости от наличия сабтайтла
+        let headerBottom: CGFloat = hasSubtitle ? 28 : 40
+
+        ZStack(alignment: .topLeading) {
+            // фон карточки
+            RoundedRectangle(cornerRadius: UI.corner, style: .continuous)
+                .fill(Color(.ypLightGrey))
+
+            // логотип
+            item.logoImage
+                .resizable()
+                .scaledToFit()
+                .frame(width: UI.logoSide, height: UI.logoSide)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.leading, UI.logoPad)
+                .padding(.top, UI.logoPad)
 
-            // Тексты
-            VStack(alignment: .leading, spacing: 8) {
+            // Верх: название + (дата справа) + [опционально] «с пересадкой»
+            VStack(alignment: .leading, spacing: titleSubtitleSpacing) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(item.name)
                         .font(.system(size: 17, weight: .regular))
-                        .foregroundColor(.black)
-                    Spacer()
-                }
-
-                if let subtitle = item.subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundColor(Color(.ypWhiteUniversal))
+                        .kerning(-0.41)
+                        .foregroundColor(Color(.ypBlackUniversal))
                         .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    Spacer(minLength: 8)
+
+                    if let date = rightDate {
+                        Text(date)
+                            .font(.system(size: 12, weight: .regular))
+                            .kerning(0.4)
+                            .foregroundColor(Color(.ypBlackUniversal))
+                            .lineLimit(1)
+                    }
                 }
 
-                // Таймлайн
-                HStack(spacing: 12) {
-                    Text(item.depTime)
-                        .font(.system(size: 22, weight: .regular))
-                        .foregroundColor(.black)
-
-                    TimelineSeparator()
-
-                    Text(item.duration) // тот же цвет, что у времени
+                if hasSubtitle, let st = item.subtitle {
+                    Text(st)
                         .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.black)
-
-                    TimelineSeparator()
-
-                    Text(item.arrTime)
-                        .font(.system(size: 22, weight: .regular))
-                        .foregroundColor(.black)
+                        .kerning(-0.41)
+                        .foregroundColor(.ypRed) // «с пересадкой…» — красным
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .padding(EdgeInsets(top: 1, leading: 0, bottom: 3, trailing: 0))
                 }
+
+                Spacer(minLength: 0) // растягиваем зону, но финальный зазор зададим .padding(.bottom)
             }
+            .padding(.leading, UI.headerLeft)
+            .padding(.trailing, UI.tlSide)
+            .padding(.top, UI.headerTop)
+            .padding(.bottom, headerBottom) // ← динамический зазор до таймлайна
+
+            // Низ: таймлайн на всю ширину с боковыми 14
+            HStack(alignment: .center, spacing: 12) {
+                Text(item.depTime)
+                    .font(.system(size: 17, weight: .regular))
+                    .kerning(-0.41)
+                    .foregroundColor(Color(.ypBlackUniversal))
+
+                timelineLine
+
+                Text(item.duration)
+                    .font(.system(size: 12, weight: .regular))
+                    .kerning(0.4)
+                    .foregroundColor(Color(.ypBlackUniversal))
+
+                timelineLine
+
+                Text(item.arrTime)
+                    .font(.system(size: 17, weight: .regular))
+                    .kerning(-0.41)
+                    .foregroundColor(Color(.ypBlackUniversal))
+            }
+            .padding(.horizontal, UI.tlSide)
+            .padding(.bottom, UI.tlBottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
-        .frame(height: 104, alignment: .center) // высота карточки
-        .padding(16)
-        .background(Color.white)                  // ВСЕГДА белая
-        .environment(\.colorScheme, .light)       // и «светлая» палитра внутри
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .frame(height: UI.height)
         .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
     }
+
+    private var timelineLine: some View {
+        Rectangle()
+            .fill(Color(.ypBlackUniversal).opacity(UI.lineOpacity))
+            .frame(height: UI.lineWidth)
+            .frame(maxWidth: .infinity)
+    }
 }
+
+
+// MARK: - Хелперы/утилиты
 
 private func isFilterApplied(_ f: CarriersFilter) -> Bool {
     f.morning || f.day || f.evening || f.night || (f.withTransfers != nil)
-}
-
-private struct TimelineSeparator: View {
-    var body: some View {
-        Rectangle()
-            .fill(Color.black.opacity(0.2))
-            .frame(height: 1)
-            .frame(maxWidth: .infinity)
-    }
 }
 
 private struct DotText: View {
@@ -188,6 +234,16 @@ private struct DotText: View {
                     .offset(x: 12, y: 8)
                     .accessibilityHidden(true)
             }
+        }
+    }
+}
+
+private extension CarrierItem {
+    var logoImage: Image {
+        if UIImage(named: logoSystemName) != nil {
+            return Image(logoSystemName)
+        } else {
+            return Image(systemName: logoSystemName)
         }
     }
 }

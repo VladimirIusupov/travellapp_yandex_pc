@@ -29,7 +29,7 @@ struct CityPickerView: View {
                             }
                             .frame(height: 60)
                             .padding(.horizontal, 16)
-                            .padding(.top, 12)
+                            .padding(.top, 4)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)

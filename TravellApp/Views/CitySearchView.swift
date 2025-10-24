@@ -34,8 +34,9 @@ struct CitySearchView: View {
                         prompt: "Поиск города")
             .navigationTitle(title)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Закрыть") { dismiss() }
+                ToolbarItem(placement: .topBarLeading) {
+                    BackChevron()
+                        .padding(.leading, 8)
                 }
             }
         }
