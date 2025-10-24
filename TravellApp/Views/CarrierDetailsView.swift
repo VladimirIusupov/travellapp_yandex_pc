@@ -6,90 +6,127 @@ struct CarrierDetailsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
+    private enum UI {
+        static let side: CGFloat = 16
+        static let logoHeight: CGFloat = 104
+        static let logoCorner: CGFloat = 20
+        static let logoImageHeight: CGFloat = 56
+        static let titleTop: CGFloat = 8
+        static let titleFont = Font.system(size: 24, weight: .bold)
+        static let vSpacing: CGFloat = 16
+        static let contactsSpacing: CGFloat = 24
+        static let bottomSpacer: CGFloat = 24
+    }
+
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Контейнер с логотипом — ВСЕГДА белый, отступы по 16, высота 104
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.ypWhiteUniversal)
-                            .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
+                VStack(alignment: .leading, spacing: UI.vSpacing) {
 
-                        Image(systemName: item.logoSystemName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 56)
-                            .foregroundColor(.red)
-                    }
-                    .frame(height: 104)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    // Логотип на белой карточке (104pt)
+                    LogoCard(
+                        image: item.logoImage,
+                        imageHeight: UI.logoImageHeight,
+                        cornerRadius: UI.logoCorner
+                    )
+                    .frame(height: UI.logoHeight)
+                    .padding(.horizontal, UI.side)
+                    .padding(.top, UI.side)
 
                     // Название компании — 24 Bold
                     Text(item.name)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.primary)
-                        .padding(.horizontal, 16)
+                        .font(UI.titleFont)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, UI.side)
 
                     // Контакты
-                    VStack(alignment: .leading, spacing: 24) {
-                        contactBlock(title: "E-mail",
-                                     value: "i.lozgkina@yandex.ru",
-                                     action: { openURL(URL(string: "mailto:i.lozgkina@yandex.ru")!) })
-
-                        contactBlock(title: "Телефон",
-                                     value: "+7 (904) 329-27-71",
-                                     action: { openURL(URL(string: "tel://+79043292771")!) })
+                    VStack(alignment: .leading, spacing: UI.contactsSpacing) {
+                        ContactRow(
+                            title: "E-mail",
+                            value: "i.lozgkina@yandex.ru",
+                            action: { openURL(URL(string: "mailto:i.lozgkina@yandex.ru")!) }
+                        )
+                        ContactRow(
+                            title: "Телефон",
+                            value: "+7 (904) 329-27-71",
+                            action: { openURL(URL(string: "tel://+79043292771")!) }
+                        )
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, UI.side)
 
-                    Spacer(minLength: 24)
+                    Spacer(minLength: UI.bottomSpacer)
                 }
             }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .padding(8)
-                        .background(.thinMaterial, in: Circle())
-                }
-                .accessibilityLabel("Назад")
-            }
-
+            ToolbarItem(placement: .topBarLeading) { BackChevron() .padding(.leading, -8) }
             ToolbarItem(placement: .principal) {
                 Text("Информация о перевозчике")
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundStyle(.primary)
             }
         }
-        // таб-бар на карточке тоже скрыт
         .toolbar(.hidden, for: .tabBar)
     }
+}
 
-    // MARK: - UI Helpers
+// MARK: - Подвью: карточка с логотипом (всегда белая)
 
-    private func contactBlock(title: String, value: String, action: @escaping () -> Void) -> some View {
+private struct LogoCard: View {
+    let image: Image
+    let imageHeight: CGFloat
+    let cornerRadius: CGFloat
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(.ypWhiteUniversal)
+
+            image
+                .resizable()
+                .scaledToFit()
+        }
+    }
+}
+
+// MARK: - Подвью: строка контакта
+
+private struct ContactRow: View {
+    let title: String
+    let value: String
+    let action: () -> Void
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 17)) // Regular 17
-                .foregroundColor(.primary)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundStyle(.primary)
 
             Button(action: action) {
                 Text(value)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .regular))
                     .kerning(0.4)
-                    .foregroundColor(.ypBlue)
+                    .foregroundStyle(.ypBlue)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+        }
+    }
+}
+
+// MARK: - Хелпер: ассетный логотип или SF Symbol
+
+private extension CarrierItem {
+    var logoImage: Image {
+        if UIImage(named: logoSystemName) != nil {
+            return Image(logoSystemName)
+        } else {
+            return Image(systemName: logoSystemName)
         }
     }
 }

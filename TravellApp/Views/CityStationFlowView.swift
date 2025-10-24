@@ -21,7 +21,7 @@ struct CityStationFlowView: View {
             )
             .navigationBarBackButtonHidden(true)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { BackChevron() }
+                ToolbarItem(placement: .topBarLeading) { BackChevron() .padding(.leading, -8) }
                 ToolbarItem(placement: .principal) {
                     Text("Выбор города")
                         .font(.system(size: 17, weight: .bold))   // Bold 17
@@ -43,7 +43,7 @@ struct CityStationFlowView: View {
                     )
                     .navigationBarBackButtonHidden(true)
                     .toolbar {
-                        ToolbarItem(placement: .topBarLeading) { BackChevron() }
+                        ToolbarItem(placement: .topBarLeading) { BackChevron() .padding(.leading, -8) }
                         ToolbarItem(placement: .principal) {
                             Text("Выбор станции")
                                 .font(.system(size: 17, weight: .bold)) // Bold 17

@@ -8,8 +8,10 @@ struct BackChevron: View {
             Image(systemName: "chevron.left")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 24, height: 24)               
+                .frame(width: 22, height: 22)               
                 .contentShape(Rectangle())
+                .border(Color("ypWhite"), width: 0)
+                .background(.ypWhite)
         }
         .buttonStyle(.plain)
         .background(Color("ypWhite"))

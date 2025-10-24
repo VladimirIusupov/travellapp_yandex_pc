@@ -76,7 +76,7 @@ struct FiltersView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) { BackChevron() }
+            ToolbarItem(placement: .topBarLeading) { BackChevron() .padding(.leading, -8) }
         }
         .toolbar(.hidden, for: .tabBar)
     }
@@ -231,44 +231,3 @@ private struct Radio: View {
         .accessibilityHidden(true)
     }
 }
-
-
-#if DEBUG
-import SwiftUI
-
-#Preview("Filters – default (light)") {
-    NavigationStack {
-        FiltersView(initial: .init(), onApply: { _ in })
-    }
-}
-
-#Preview("Filters – selected (dark)") {
-    var f = CarriersFilter()
-    f.morning = true
-    f.evening = true
-    f.withTransfers = true
-
-    return NavigationStack {
-        FiltersView(initial: f, onApply: { _ in })
-    }
-    .preferredColorScheme(.dark)
-}
-
-/// Вспомогательный контейнер для превью со стейтом
-private struct StatefulPreview<Content: View, Value>: View {
-    @State private var value: Value
-    private let contentBuilder: (Binding<Value>) -> Content
-
-    init(initial: Value, @ViewBuilder content: @escaping (Binding<Value>) -> Content) {
-        self._value = State(initialValue: initial)
-        self.contentBuilder = content
-    }
-
-    init(@ViewBuilder content: @escaping (Binding<Value>) -> Content) where Value == Bool {
-        self._value = State(initialValue: false)
-        self.contentBuilder = content
-    }
-
-    var body: some View { contentBuilder($value) }
-}
-#endif

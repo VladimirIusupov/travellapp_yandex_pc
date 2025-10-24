@@ -36,7 +36,7 @@ struct CitySearchView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     BackChevron()
-                        .padding(.leading, 8)
+                        .padding(.leading, -8)
                 }
             }
         }

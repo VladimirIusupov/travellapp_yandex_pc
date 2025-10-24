@@ -17,7 +17,9 @@ struct AgreementWebView: View {
                             .padding(.leading, -8)
                     }
                 }
+                .background(.ypWhite)
         }
+        .background(.ypWhite)
     }
 }
 
