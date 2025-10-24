@@ -30,6 +30,5 @@ struct SearchBar: View {
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal)
-        .padding(.top, 6)
     }
 }

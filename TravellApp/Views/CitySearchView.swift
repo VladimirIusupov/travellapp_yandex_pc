@@ -6,14 +6,17 @@ struct CitySearchView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
-    // MARK: Поиск по API в следующем спринте
-    // Временно статический список, позже подключим реальный АПИ
-    @State private var allCities = ["Москва", "Санкт-Петербург", "Казань", "Екатеринбург", "Новосибирск", "Нижний Новгород"]
-    
-    var filtered: [String] {
+
+    // временный список до подключения API
+    @State private var allCities = [
+        "Москва", "Санкт-Петербург", "Казань",
+        "Екатеринбург", "Новосибирск", "Нижний Новгород"
+    ]
+
+    private var filtered: [String] {
         guard !query.isEmpty else { return allCities }
-        let q = query.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        return allCities.filter { $0.folding(options: .diacriticInsensitive, locale: .current).lowercased().contains(q) }
+        let q = query.normalizedForSearch()
+        return allCities.filter { $0.normalizedForSearch().contains(q) }
     }
 
     var body: some View {
@@ -23,12 +26,12 @@ struct CitySearchView: View {
                     Button {
                         onPick(city, UUID().uuidString)
                         dismiss()
-                    } label: {
-                        Text(city)
-                    }
+                    } label: { Text(city) }
                 }
             }
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск города")
+            .searchable(text: $query,
+                        placement: .navigationBarDrawer(displayMode: .always),
+                        prompt: "Поиск города")
             .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -36,5 +39,14 @@ struct CitySearchView: View {
                 }
             }
         }
+    }
+}
+
+fileprivate extension String {
+    func normalizedForSearch() -> String {
+        self.folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .replacingOccurrences(of: "ё", with: "е")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

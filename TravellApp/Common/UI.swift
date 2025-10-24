@@ -4,12 +4,15 @@ import SwiftUI
 struct BackChevron: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        Button { dismiss() } label: {
+        Button(action: { dismiss() }) {
             Image(systemName: "chevron.left")
-                .imageScale(.large)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.primary)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 24, height: 24)               
+                .foregroundStyle(Color("ypBlack"))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Назад")
     }
 }

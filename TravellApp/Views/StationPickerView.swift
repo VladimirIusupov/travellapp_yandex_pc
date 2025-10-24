@@ -1,4 +1,3 @@
-// StationPickerView.swift
 import SwiftUI
 
 struct StationPickerView: View {
@@ -7,39 +6,42 @@ struct StationPickerView: View {
     let onPick: (StationRow) -> Void
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.filtered) { station in
-                    Button {
-                        onPick(station)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Text(station.title)
-                                .font(.system(size: 17, weight: .regular))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                            Spacer(minLength: 8)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.tertiary)
+        VStack(spacing: 0) {
+            SearchBar(placeholder: "Введите запрос", text: $viewModel.query)
+            // Список станций
+            ScrollView {
+                LazyVStack(spacing: 0) { // без расстояния между ячейками
+                    ForEach(viewModel.filtered) { station in
+                        Button {
+                            onPick(station)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(station.title)
+                                    .font(.system(size: 18, weight: .regular)) // SF Pro Regular 17
+                                    .kerning(-0.41)
+                                    .foregroundStyle(Color("ypBlack"))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                Spacer(minLength: 8)
+                                Image(systemName: "chevron.right")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 24, height: 24)                // 24×24
+                                    .foregroundStyle(Color("ypBlack").opacity(0.6))
+                            }
+                            .frame(height: 60)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+                            .background(Color("ypWhite"))
+                            .contentShape(Rectangle())
                         }
-                        .frame(height: 60)
-                        .padding(.horizontal, 16)
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
+            .background(Color("ypWhite"))
         }
-        .background(Color(.systemBackground))
-        .searchable(text: $viewModel.query,
-                    placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "Введите запрос")
-        .onChange(of: viewModel.query) { _ in
-            viewModel.updateFilter()
-        }
-        .navigationTitle("Выбор станции")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color("ypWhite").ignoresSafeArea())
+        .onChange(of: viewModel.query) { _ in viewModel.updateFilter() }
     }
 }
