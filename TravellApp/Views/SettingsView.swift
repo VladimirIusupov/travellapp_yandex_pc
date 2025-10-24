@@ -3,63 +3,96 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var theme: ThemeManager
     @State private var showAgreement = false
-
+    
+    private let rowHeight: CGFloat = 60
+    private let sideInset: CGFloat = 16
+    
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Toggle(isOn: $theme.isDarkTheme) {
+        ZStack {
+            // Фон страницы из Assets (имеет варианты Light/Dark)
+            Color("ypWhite").ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Верхний отступ 24 от safe area
+                Color.clear.frame(height: 24)
+                
+                // Простой список без секций/разделителей/зазоров
+                List {
+                    // Строка: Тёмная тема
+                    HStack {
                         Text("Тёмная тема")
                             .font(.system(size: 17, weight: .regular))
-                            .foregroundStyle(.primary)
+                            .kerning(-0.41)
+                            .foregroundColor(Color("ypBlack"))
+                        Spacer(minLength: sideInset)
+                        Toggle("", isOn: $theme.isDarkTheme)
+                            .labelsHidden()
+                            .tint(Color("ypBlue")) // фирменный синий
                     }
-                    .tint(accentBlue)
-                }
-                .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-                Section {
+                    .frame(height: rowHeight)
+                    .listRowInsets(EdgeInsets(top: 0, leading: sideInset, bottom: 0, trailing: sideInset))
+                    .listRowBackground(Color("ypWhite"))
+                    
+                    // Строка: Пользовательское соглашение
                     Button {
                         showAgreement = true
                     } label: {
                         HStack {
                             Text("Пользовательское соглашение")
                                 .font(.system(size: 17, weight: .regular))
-                                .foregroundStyle(.primary)
-                            Spacer()
+                                .kerning(-0.41)
+                                .foregroundColor(Color("ypBlack"))
+                            Spacer(minLength: sideInset)
                             Image(systemName: "chevron.right")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(Color("ypBlack"))
                         }
+                        .frame(height: rowHeight)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 0, leading: sideInset, bottom: 0, trailing: sideInset))
+                    .listRowBackground(Color("ypWhite"))
                 }
-                .listRowBackground(Color(.secondarySystemGroupedBackground))
+                .listStyle(.plain)
+                .listRowSeparator(.hidden)     // без разделителей
+                .listSectionSpacing(0)         // без зазоров
+                .scrollContentBackground(.hidden)
+                .background(Color("ypWhite"))
             }
-            .listStyle(.insetGrouped)
-            .navigationTitle("Настройки")
-            // ПРИКЛЕЕННЫЙ НИЖНИЙ ФУТЕР — всегда у низа экрана
+            // Футер снизу
             .safeAreaInset(edge: .bottom) {
                 footer
-                    .background(.clear)    // не перекрашиваем фон
-                    .padding(.bottom, 8)   // лёгкая «подушка» над home-баром
+                    .padding(.horizontal, sideInset) // слева/справа 16
+                    .padding(.bottom, 24)            // до таббара 24
+                    .background(Color("ypWhite"))
             }
         }
-        // оферта — полноэкранно, перекрывает TabBar
+        // Принудительно применяем выбранную тему ко всему экрану
+        .preferredColorScheme(theme.isDarkTheme ? .dark : .light)
+        // Оферта — полноэкранно, перекрывает TabBar
         .fullScreenCover(isPresented: $showAgreement) {
             AgreementWebView(urlString: "https://yandex.ru/legal/practicum_offer")
+                .preferredColorScheme(theme.isDarkTheme ? .dark : .light)
                 .ignoresSafeArea()
         }
     }
-
+    
+    // MARK: - Footer (44pt)
     private var footer: some View {
-        VStack(spacing: 8) {
-            Text("Приложение использует API «Яндекс.Расписания»")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            Text("Версия 1.0 (beta)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+        ZStack {
+            Color.clear.frame(height: 44)
+            VStack(spacing: 16) { // ← было 2, стало 16
+                Text("Приложение использует API «Яндекс.Расписания»")
+                Text("Версия 1.0 (beta)")
+            }
+            .font(.system(size: 12, weight: .regular))
+            .kerning(0.4)
+            .foregroundColor(Color("ypBlack"))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 }

@@ -6,9 +6,6 @@ struct CarrierDetailsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
-    // Цвета макета
-    private let accentBlue = Color(red: 0.22, green: 0.45, blue: 0.91) // #3772E7
-
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
@@ -18,7 +15,7 @@ struct CarrierDetailsView: View {
                     // Контейнер с логотипом — ВСЕГДА белый, отступы по 16, высота 104
                     ZStack {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color.white)
+                            .fill(.ypWhiteUniversal)
                             .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
 
                         Image(systemName: item.logoSystemName)
@@ -88,9 +85,9 @@ struct CarrierDetailsView: View {
 
             Button(action: action) {
                 Text(value)
-                    .font(.system(size: 12)) // Regular 12, letter-spacing ~ 0.4
+                    .font(.system(size: 12))
                     .kerning(0.4)
-                    .foregroundColor(accentBlue)
+                    .foregroundColor(.ypBlue)
             }
             .buttonStyle(.plain)
         }

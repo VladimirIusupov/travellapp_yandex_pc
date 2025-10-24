@@ -8,8 +8,6 @@ struct FiltersView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var filter: CarriersFilter
 
-    private let blue = Color(hex: 0x3772E7)
-
     init(initial: CarriersFilter, onApply: @escaping (CarriersFilter) -> Void) {
         self.initial = initial
         self.onApply = onApply
@@ -80,7 +78,7 @@ struct FiltersView: View {
                         Spacer()
                     }
                     .frame(height: 60)
-                    .background(blue)
+                    .background(Color(.ypBlue))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
                 }

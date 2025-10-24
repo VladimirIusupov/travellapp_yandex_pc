@@ -2,11 +2,15 @@ import SwiftUI
 
 struct CarriersListView: View {
     @ObservedObject var viewModel: CarriersListViewModel
-
+    @EnvironmentObject private var theme: ThemeManager
     // Навигационные действия
     var onOpenFilters: () -> Void
     var onOpenDetails: (CarrierItem) -> Void
-
+    
+    private var pageBackground: Color {
+        theme.isDarkTheme ? .black : Color(.ypWhite)
+    }
+    
     // MARK: - UI константы
     private let screenPadding: CGFloat = 16
     private let titleFont = Font.system(size: 24, weight: .bold) // по макету
@@ -56,13 +60,13 @@ struct CarriersListView: View {
                     onOpenFilters()
                 } label: {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(accentBlue)
+                        .fill(.ypBlue)
                         .frame(height: 60)
                         .overlay {
                             DotText(
                                 "Уточнить время",
                                 showDot: isFilterApplied(viewModel.filter),
-                                dotColor: (redNote)
+                                dotColor: (.ypRed)
                             )
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.white)
@@ -100,7 +104,7 @@ private struct CarrierCard: View {
             // Лого
             Image(systemName: item.logoSystemName)
                 .font(.system(size: 22, weight: .semibold))
-                .foregroundColor(Color(hex: 0xF56B6C))
+                .foregroundColor(Color(.ypWhiteUniversal))
                 .frame(width: 44, height: 44)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -117,7 +121,7 @@ private struct CarrierCard: View {
                 if let subtitle = item.subtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.system(size: 17, weight: .regular))
-                        .foregroundColor(Color(hex: 0xF56B6C))
+                        .foregroundColor(Color(.ypWhiteUniversal))
                         .lineLimit(1)
                 }
 
