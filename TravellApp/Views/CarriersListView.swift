@@ -92,20 +92,15 @@ private struct CarrierCard: View {
     let item: CarrierItem
     var rightDate: String? = nil
 
-    // UI
     private enum UI {
         static let height: CGFloat = 104
         static let corner: CGFloat = 28
-
         static let logoSide: CGFloat = 44
-        static let logoPad: CGFloat = 14           // левый/верхний отступ логотипа
-
+        static let logoPad: CGFloat = 14
         static let headerLeft: CGFloat = logoPad + logoSide + 12
         static let headerTop: CGFloat = 14
-
-        static let tlSide: CGFloat = 14            // таймлайн: слева/справа 14
-        static let tlBottom: CGFloat = 14          // таймлайн: снизу 14
-
+        static let tlSide: CGFloat = 14
+        static let tlBottom: CGFloat = 14
         static let lineWidth: CGFloat = 1
         static let lineOpacity: CGFloat = 0.3
     }
@@ -113,15 +108,13 @@ private struct CarrierCard: View {
     var body: some View {
         let hasSubtitle = (item.subtitle?.isEmpty == false)
         let titleSubtitleSpacing: CGFloat = hasSubtitle ? 6 : 0
-        // Подстраиваем «воздух» над таймлайном в зависимости от наличия сабтайтла
         let headerBottom: CGFloat = hasSubtitle ? 28 : 40
+        let headerTop = UI.headerTop + (hasSubtitle ? 0 : 10)
 
         ZStack(alignment: .topLeading) {
-            // фон карточки
             RoundedRectangle(cornerRadius: UI.corner, style: .continuous)
                 .fill(Color(.ypLightGrey))
 
-            // логотип
             item.logoImage
                 .resizable()
                 .scaledToFit()
@@ -131,7 +124,6 @@ private struct CarrierCard: View {
                 .padding(.leading, UI.logoPad)
                 .padding(.top, UI.logoPad)
 
-            // Верх: название + (дата справа) + [опционально] «с пересадкой»
             VStack(alignment: .leading, spacing: titleSubtitleSpacing) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(item.name)
@@ -156,20 +148,19 @@ private struct CarrierCard: View {
                     Text(st)
                         .font(.system(size: 12, weight: .regular))
                         .kerning(-0.41)
-                        .foregroundColor(.ypRed) // «с пересадкой…» — красным
+                        .foregroundColor(.ypRed)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .padding(EdgeInsets(top: 1, leading: 0, bottom: 3, trailing: 0))
                 }
 
-                Spacer(minLength: 0) // растягиваем зону, но финальный зазор зададим .padding(.bottom)
+                Spacer(minLength: 0)
             }
             .padding(.leading, UI.headerLeft)
             .padding(.trailing, UI.tlSide)
-            .padding(.top, UI.headerTop)
-            .padding(.bottom, headerBottom) // ← динамический зазор до таймлайна
+            .padding(.top, headerTop)          // ← используем вычисленный отступ
+            .padding(.bottom, headerBottom)
 
-            // Низ: таймлайн на всю ширину с боковыми 14
             HStack(alignment: .center, spacing: 12) {
                 Text(item.depTime)
                     .font(.system(size: 17, weight: .regular))
@@ -205,6 +196,7 @@ private struct CarrierCard: View {
             .frame(maxWidth: .infinity)
     }
 }
+
 
 
 // MARK: - Хелперы/утилиты
@@ -247,3 +239,78 @@ private extension CarrierItem {
         }
     }
 }
+
+#if DEBUG
+import SwiftUI
+
+// Отдельная карточка — варианты
+#Preview("CarrierCard – with/without transfer") {
+    VStack(spacing: 12) {
+        CarrierCard(
+            item: .init(
+                logoSystemName: "rzd",          // ассет или SF Symbol
+                name: "РЖД",
+                subtitle: "С пересадкой в Костроме",
+                depTime: "06:10",
+                arrTime: "14:55",
+                duration: "9 часов"
+            ),
+            rightDate: "14 января"
+        )
+        .padding(.horizontal, 16)
+
+        CarrierCard(
+            item: .init(
+                logoSystemName: "fgk",
+                name: "ФГК",
+                subtitle: nil,
+                depTime: "07:45",
+                arrTime: "16:20",
+                duration: "9 часов"
+            ),
+            rightDate: "15 января"
+        )
+        .padding(.horizontal, 16)
+    }
+    .padding(.vertical, 12)
+    .background(Color(.systemBackground))
+    .previewLayout(.sizeThatFits)
+}
+
+// Экран списка — светлая тема
+#Preview("CarriersListView – light") {
+    let vm = CarriersListViewModel(titleFrom: "Москва", titleTo: "Санкт-Петербург", useMocks: true)
+    vm.all = CarriersListViewModel.mockCarriers
+    vm.updateFilter(.init()) // без фильтров → filtered = all
+
+    return NavigationStack {
+        CarriersListView(
+            viewModel: vm,
+            onOpenFilters: {},
+            onOpenDetails: { _ in }
+        )
+    }
+    .environmentObject(ThemeManager()) // ваш менеджер темы
+}
+
+// Экран списка — тёмная тема
+#Preview("CarriersListView – dark") {
+    let vm = CarriersListViewModel(titleFrom: "Москва", titleTo: "Санкт-Петербург", useMocks: true)
+    vm.all = CarriersListViewModel.mockCarriers
+    vm.updateFilter(.init())
+
+    let theme = ThemeManager()
+    theme.isDarkTheme = true
+
+    return NavigationStack {
+        CarriersListView(
+            viewModel: vm,
+            onOpenFilters: {},
+            onOpenDetails: { _ in }
+        )
+    }
+    .environmentObject(theme)
+    .preferredColorScheme(.dark)
+}
+#endif
+

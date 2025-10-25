@@ -17,7 +17,7 @@ public extension Story {
     ]
 }
 
-/// Память о просмотренных историях
+// Память о просмотренных историях
 final class StoryStore: ObservableObject {
     @AppStorage("seenStoryIDs") private var seenIDsData: Data = Data()
     @Published private(set) var seen: Set<UUID> = []
