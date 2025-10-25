@@ -19,8 +19,6 @@ struct CarriersListView: View {
         static let bottomBtnBottom: CGFloat = 24
     }
 
-    private var pageBackground: Color { theme.isDarkTheme ? .black : Color(.ypWhite) }
-
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
@@ -51,7 +49,7 @@ struct CarriersListView: View {
                     .padding(.bottom, UI.bottomBtnH + UI.bottomBtnBottom + 12) // место под кнопку
                 }
             }
-            .background(pageBackground)
+            .background(.ypWhite)
 
             // Кнопка «Уточнить время»
             Button(action: onOpenFilters) {

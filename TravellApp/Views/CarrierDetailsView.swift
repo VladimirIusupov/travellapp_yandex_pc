@@ -58,7 +58,9 @@ struct CarrierDetailsView: View {
 
                     Spacer(minLength: UI.bottomSpacer)
                 }
+                .background(.ypWhite)
             }
+            .background(.ypWhite)
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
