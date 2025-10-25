@@ -16,16 +16,19 @@ final class CityPickerViewModel: ObservableObject {
     }
 
     func updateFilter() {
-        let q = normalized(query)
-        filtered = q.isEmpty
-        ? rows
-        : rows.filter { normalized($0.title).contains(q) || normalized($0.title).hasPrefix(q) }
+        let q = query.normalizedForSearch()
+        filtered = q.isEmpty ? rows : rows.filter {
+            let t = $0.title.normalizedForSearch()
+            return t.contains(q) || t.hasPrefix(q)
+        }
     }
+}
 
-    private func normalized(_ s: String) -> String {
-        s.folding(options: .diacriticInsensitive, locale: .current)
-         .lowercased()
-         .replacingOccurrences(of: "ё", with: "е")
-         .trimmingCharacters(in: .whitespacesAndNewlines)
+fileprivate extension String {
+    func normalizedForSearch() -> String {
+        self.folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .replacingOccurrences(of: "ё", with: "е")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

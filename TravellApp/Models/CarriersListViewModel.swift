@@ -48,7 +48,7 @@ public struct CarriersFilter: Equatable {
 }
 
 // ВАЖНО: НЕ объявляй здесь протокол SchedulesAPI — он уже есть в Environment+API.swift
-// public protocol SchedulesAPI { ... }  <-- удалить/не добавлять!
+// public protocol SchedulesAPI { ... }
 
 // MARK: - ViewModel списка перевозчиков
 
@@ -89,7 +89,6 @@ final class CarriersListViewModel: ObservableObject {
 
     // MARK: - Загрузка данных
 
-    /// Загружает список перевозчиков. В случае ошибок SchedulesAPIClient сам показывает экраны ошибок.
     @MainActor
     func reload(fromCode: String, toCode: String) async {
         if useMocks {
@@ -167,29 +166,36 @@ final class CarriersListViewModel: ObservableObject {
 
 extension CarriersListViewModel {
     static let mockCarriers: [CarrierItem] = [
-        .init(logoSystemName: "train.side.front.car",
+        .init(logoSystemName: "rzd",
               name: "РЖД",
               subtitle: "С пересадкой в Костроме",
               depTime: "22:30",
               arrTime: "08:15",
               duration: "20 часов"),
-        .init(logoSystemName: "bolt.horizontal.circle",
+        .init(logoSystemName: "fgk",
               name: "ФГК",
               subtitle: nil,
               depTime: "01:15",
               arrTime: "09:00",
               duration: "9 часов"),
-        .init(logoSystemName: "drop.fill",
+        .init(logoSystemName: "ural_oil",
               name: "Урал логистика",
               subtitle: nil,
               depTime: "12:30",
               arrTime: "21:00",
               duration: "9 часов"),
-        .init(logoSystemName: "train.side.front.car",
-              name: "РЖД",
-              subtitle: "С пересадкой в Костроме",
-              depTime: "22:30",
-              arrTime: "08:15",
-              duration: "20 часов")
+        .init(logoSystemName: "shippingbox.fill",
+              name: "BoxTrans",
+              subtitle: "С пересадкой в Твери",
+              depTime: "10:15",
+              arrTime: "19:40",
+              duration: "9 часов"),
+        .init(logoSystemName: "tram.fill",
+              name: "ГТК",
+              subtitle: nil,
+              depTime: "11:05",
+              arrTime: "20:25",
+              duration: "9 часов")
     ]
 }
+

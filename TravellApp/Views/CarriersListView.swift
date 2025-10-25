@@ -1,172 +1,314 @@
 import SwiftUI
 
+// MARK: - CarriersListView
+
 struct CarriersListView: View {
     @ObservedObject var viewModel: CarriersListViewModel
-    let onOpenFilters: () -> Void
-    let onOpenDetails: (CarrierItem) -> Void
+    @EnvironmentObject private var theme: ThemeManager
+
+    // Навигация
+    var onOpenFilters: () -> Void
+    var onOpenDetails: (CarrierItem) -> Void
+
+    private enum UI {
+        static let side: CGFloat = 16
+        static let betweenCards: CGFloat = 8
+        static let titleTop: CGFloat = 8
+        static let titleFont = Font.system(size: 24, weight: .bold)
+        static let bottomBtnH: CGFloat = 60
+        static let bottomBtnBottom: CGFloat = 24
+    }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Заголовок маршрута — 24 pt
-                    Text(titleText)
-                        .font(.system(size: 24, weight: .bold))
-                        .multilineTextAlignment(.leading)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
+                VStack(alignment: .leading, spacing: 16) {
+                    // Заголовок
+                    Text("\(viewModel.titleFrom) → \(viewModel.titleTo)")
+                        .font(UI.titleFont)
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, UI.titleTop)
+                        .padding(.horizontal, UI.side)
 
-                    if viewModel.filtered.isEmpty {
-                        Text("Вариантов нет")
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, 60)
-                            .padding(.horizontal, 20)
-                    } else {
-                        LazyVStack(spacing: 16) {
-                            ForEach(viewModel.filtered) { item in
-                                CarrierCard(item: item) {
-                                    onOpenDetails(item)
-                                }
-                                .padding(.horizontal, 20)
+                    // Карточки: 16 слева/справа, 8 между, 16 от заголовка
+                    LazyVStack(spacing: UI.betweenCards) {
+                        ForEach(Array(viewModel.filtered.enumerated()), id: \.element.id) { idx, item in
+                            Button {
+                                onOpenDetails(item)
+                            } label: {
+                                CarrierCard(
+                                    item: item,
+                                    rightDate: mockDate(forIndex: idx) // временно, пока нет даты из API
+                                )
                             }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, UI.side)
                         }
                     }
-
-                    Spacer(minLength: 120)
+                    .padding(.bottom, UI.bottomBtnH + UI.bottomBtnBottom + 12) // место под кнопку
                 }
             }
+            .background(.ypWhite)
 
-            if !viewModel.didLoadOnce && viewModel.filtered.isEmpty {
-                ProgressView().scaleEffect(1.15)
+            // Кнопка «Уточнить время»
+            Button(action: onOpenFilters) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.ypBlue)
+                    .frame(height: UI.bottomBtnH)
+                    .overlay {
+                        DotText("Уточнить время",
+                                showDot: isFilterApplied(viewModel.filter),
+                                dotColor: .ypRed)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                    }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, UI.side)
+            .padding(.bottom, UI.bottomBtnBottom)
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                BackChevron()
+                    .padding(.leading, -8)
             }
         }
         .task { await viewModel.ensureLoaded() }
-        .safeAreaInset(edge: .bottom) {
-            Button(action: onOpenFilters) {
-                Text("Уточнить время")
-                    .font(.system(size: 17, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-            }
-            .buttonStyle(.borderedProminent)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(color: Color.black.opacity(0.12), radius: 12, y: 6)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-        }
-        .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var titleText: String {
-        let from = viewModel.titleFrom.isEmpty ? "Откуда" : viewModel.titleFrom
-        let to   = viewModel.titleTo.isEmpty   ? "Куда"   : viewModel.titleTo
-        return "\(from) → \(to)"
+    // Простой мок-дата справа (замените на реальную, когда появится)
+    private func mockDate(forIndex i: Int) -> String {
+        let day = 14 + (i % 3) // 14/15/16 января для демонстрации
+        return "\(day) января"
     }
 }
-
-// MARK: - Карточка
 
 private struct CarrierCard: View {
     let item: CarrierItem
-    let onTap: () -> Void
+    var rightDate: String? = nil
 
-    @Environment(\.colorScheme) private var scheme
+    private enum UI {
+        static let height: CGFloat = 104
+        static let corner: CGFloat = 28
+        static let logoSide: CGFloat = 44
+        static let logoPad: CGFloat = 14
+        static let headerLeft: CGFloat = logoPad + logoSide + 12
+        static let headerTop: CGFloat = 14
+        static let tlSide: CGFloat = 14
+        static let tlBottom: CGFloat = 14
+        static let lineWidth: CGFloat = 1
+        static let lineOpacity: CGFloat = 0.3
+    }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Верхний ряд
-                HStack(alignment: .center, spacing: 12) {
-                    logo
+        let hasSubtitle = (item.subtitle?.isEmpty == false)
+        let titleSubtitleSpacing: CGFloat = hasSubtitle ? 6 : 0
+        let headerBottom: CGFloat = hasSubtitle ? 28 : 40
+        let headerTop = UI.headerTop + (hasSubtitle ? 0 : 10)
 
-                    // Текстовый блок фиксированной высоты, чтобы центрироваться по логотипу
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.name)
-                            .font(.system(size: 17, weight: .regular)) // Regular 17
-                            .foregroundStyle(.primary)
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: UI.corner, style: .continuous)
+                .fill(Color(.ypLightGrey))
 
-                        if let subtitle = item.subtitle, !subtitle.isEmpty {
-                            Text(subtitle)
-                                .font(.system(size: 13, weight: .regular))
-                                .foregroundStyle(Color.red)
-                        }
-                    }
-                    .frame(height: 56, alignment: item.subtitle?.isEmpty == false ? .top : .center) // центр, если подзаголовка нет
+            item.logoImage
+                .resizable()
+                .scaledToFit()
+                .frame(width: UI.logoSide, height: UI.logoSide)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.leading, UI.logoPad)
+                .padding(.top, UI.logoPad)
+
+            VStack(alignment: .leading, spacing: titleSubtitleSpacing) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(item.name)
+                        .font(.system(size: 17, weight: .regular))
+                        .kerning(-0.41)
+                        .foregroundColor(Color(.ypBlackUniversal))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
 
                     Spacer(minLength: 8)
 
-                    if let date = itemDateRight {
+                    if let date = rightDate {
                         Text(date)
-                            .font(.system(size: 12, weight: .regular)) // Regular 12
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 12, weight: .regular))
+                            .kerning(0.4)
+                            .foregroundColor(Color(.ypBlackUniversal))
+                            .lineLimit(1)
                     }
                 }
 
-                // Таймлайн: Regular 17 / 12
-                timeline(dep: item.depTime, duration: item.duration, arr: item.arrTime)
+                if hasSubtitle, let st = item.subtitle {
+                    Text(st)
+                        .font(.system(size: 12, weight: .regular))
+                        .kerning(-0.41)
+                        .foregroundColor(.ypRed)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .padding(EdgeInsets(top: 1, leading: 0, bottom: 3, trailing: 0))
+                }
+
+                Spacer(minLength: 0)
             }
-            .padding(16)
-            .background(cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous)) // ← 24
-            .shadow(color: (scheme == .light ? .black.opacity(0.08) : .black.opacity(0.55)),
-                    radius: (scheme == .light ? 6 : 10), y: 2)
+            .padding(.leading, UI.headerLeft)
+            .padding(.trailing, UI.tlSide)
+            .padding(.top, headerTop)          // ← используем вычисленный отступ
+            .padding(.bottom, headerBottom)
+
+            HStack(alignment: .center, spacing: 12) {
+                Text(item.depTime)
+                    .font(.system(size: 17, weight: .regular))
+                    .kerning(-0.41)
+                    .foregroundColor(Color(.ypBlackUniversal))
+
+                timelineLine
+
+                Text(item.duration)
+                    .font(.system(size: 12, weight: .regular))
+                    .kerning(0.4)
+                    .foregroundColor(Color(.ypBlackUniversal))
+
+                timelineLine
+
+                Text(item.arrTime)
+                    .font(.system(size: 17, weight: .regular))
+                    .kerning(-0.41)
+                    .foregroundColor(Color(.ypBlackUniversal))
+            }
+            .padding(.horizontal, UI.tlSide)
+            .padding(.bottom, UI.tlBottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
-        .buttonStyle(.plain)
+        .frame(height: UI.height)
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
     }
 
-    private var logo: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(.systemGray6))
-                .frame(width: 56, height: 56)
-            Image(systemName: item.logoSystemName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 28, height: 28)
-                .foregroundStyle(.red)
-        }
-        .accessibilityHidden(true)
-    }
-
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(Color(uiColor: .secondarySystemBackground))
-    }
-
-    // Подключишь поле даты — верни его здесь
-    private var itemDateRight: String? {
-        nil
-    }
-
-    private func timeline(dep: String, duration: String, arr: String) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            Text(dep)
-                .font(.system(size: 17, weight: .regular))  // Regular 17
-                .foregroundStyle(.primary)
-                .fixedSize()
-
-            line
-
-            Text(duration)
-                .font(.system(size: 12, weight: .regular))  // Regular 12
-                .foregroundStyle(.secondary)
-                .fixedSize()
-
-            line
-
-            Text(arr)
-                .font(.system(size: 17, weight: .regular))  // Regular 17
-                .foregroundStyle(.primary)
-                .fixedSize()
-        }
-    }
-
-    private var line: some View {
+    private var timelineLine: some View {
         Rectangle()
-            .fill(Color.secondary.opacity(0.35))
-            .frame(height: 1)
+            .fill(Color(.ypBlackUniversal).opacity(UI.lineOpacity))
+            .frame(height: UI.lineWidth)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
     }
 }
+
+
+
+// MARK: - Хелперы/утилиты
+
+private func isFilterApplied(_ f: CarriersFilter) -> Bool {
+    f.morning || f.day || f.evening || f.night || (f.withTransfers != nil)
+}
+
+private struct DotText: View {
+    let text: String
+    let showDot: Bool
+    let dotColor: Color
+
+    init(_ text: String, showDot: Bool, dotColor: Color) {
+        self.text = text
+        self.showDot = showDot
+        self.dotColor = dotColor
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Text(text)
+            if showDot {
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 8, height: 8)
+                    .offset(x: 12, y: 8)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+}
+
+private extension CarrierItem {
+    var logoImage: Image {
+        if UIImage(named: logoSystemName) != nil {
+            return Image(logoSystemName)
+        } else {
+            return Image(systemName: logoSystemName)
+        }
+    }
+}
+
+#if DEBUG
+import SwiftUI
+
+// Отдельная карточка — варианты
+#Preview("CarrierCard – with/without transfer") {
+    VStack(spacing: 12) {
+        CarrierCard(
+            item: .init(
+                logoSystemName: "rzd",          // ассет или SF Symbol
+                name: "РЖД",
+                subtitle: "С пересадкой в Костроме",
+                depTime: "06:10",
+                arrTime: "14:55",
+                duration: "9 часов"
+            ),
+            rightDate: "14 января"
+        )
+        .padding(.horizontal, 16)
+
+        CarrierCard(
+            item: .init(
+                logoSystemName: "fgk",
+                name: "ФГК",
+                subtitle: nil,
+                depTime: "07:45",
+                arrTime: "16:20",
+                duration: "9 часов"
+            ),
+            rightDate: "15 января"
+        )
+        .padding(.horizontal, 16)
+    }
+    .padding(.vertical, 12)
+    .background(Color(.systemBackground))
+    .previewLayout(.sizeThatFits)
+}
+
+// Экран списка — светлая тема
+#Preview("CarriersListView – light") {
+    let vm = CarriersListViewModel(titleFrom: "Москва", titleTo: "Санкт-Петербург", useMocks: true)
+    vm.all = CarriersListViewModel.mockCarriers
+    vm.updateFilter(.init()) // без фильтров → filtered = all
+
+    return NavigationStack {
+        CarriersListView(
+            viewModel: vm,
+            onOpenFilters: {},
+            onOpenDetails: { _ in }
+        )
+    }
+    .environmentObject(ThemeManager()) // ваш менеджер темы
+}
+
+// Экран списка — тёмная тема
+#Preview("CarriersListView – dark") {
+    let vm = CarriersListViewModel(titleFrom: "Москва", titleTo: "Санкт-Петербург", useMocks: true)
+    vm.all = CarriersListViewModel.mockCarriers
+    vm.updateFilter(.init())
+
+    let theme = ThemeManager()
+    theme.isDarkTheme = true
+
+    return NavigationStack {
+        CarriersListView(
+            viewModel: vm,
+            onOpenFilters: {},
+            onOpenDetails: { _ in }
+        )
+    }
+    .environmentObject(theme)
+    .preferredColorScheme(.dark)
+}
+#endif
+

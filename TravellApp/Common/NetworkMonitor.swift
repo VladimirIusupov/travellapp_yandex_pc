@@ -13,7 +13,6 @@ final class NetworkMonitor: ObservableObject {
                 let reachable = (path.status == .satisfied)
                 if self?.isReachable != reachable {
                     self?.isReachable = reachable
-                    // если внезапно пропал интернет — покажем экран
                     if let alerts = Self.locateAppAlerts() {
                         if !reachable { alerts.presentNoInternet() }
                     }
