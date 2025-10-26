@@ -1,68 +1,108 @@
 import SwiftUI
 
+// MARK: - View
 struct CityPickerView: View {
-    @ObservedObject var viewModel: CityPickerViewModel
-    let onPick: (CityRow) -> Void
-
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel = CityPickerViewModel()
+    
+    let onSelect: (City) -> Void
+    
     var body: some View {
         VStack(spacing: 0) {
-            // Строка поиска — сразу под заголовком
-            SearchBar(placeholder: "Введите запрос", text: $viewModel.query)
-            // Список
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(viewModel.filtered) { city in
-                        Button {
-                            onPick(city)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text(city.title)
-                                    .font(.system(size: 17, weight: .regular))
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                Spacer(minLength: 8)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 24, weight: .semibold))
-                                    .foregroundStyle(Color("ypBlack"))
-                                    .frame(width: 24, height: 24)
-                            }
-                            .frame(height: 60)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 4)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
+            
+            HStack {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 17, height: 22)
+                        .foregroundStyle(.ypBlack)
+                }
+                .padding(.leading, 8)
+                .padding(.vertical, 11)
+                
+                Spacer()
+                
+                Text("Выбор города")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                
+                Spacer()
+                
+                Color.clear.frame(width: 17, height: 22)
+                    .padding(.trailing, 8)
+            }
+            .padding(.bottom, 4)
+            .background(.ypWhite)
+            
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.ypGrey)
+                TextField("Введите запрос", text: $viewModel.searchText)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .foregroundStyle(.ypBlack)
+                if !viewModel.searchText.isEmpty {
+                    Button { viewModel.searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.ypGrey)
                     }
+                    .buttonStyle(.plain)
                 }
             }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .background(.ypTertiary)
+            .cornerRadius(10)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+
+            
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView("Загрузка...")
+                Spacer()
+            } else if let appError = viewModel.appError {
+                Spacer()
+                ErrorView(type: appError.errorType)
+                Spacer()
+            } else if viewModel.filteredCities.isEmpty {
+                Spacer()
+                Text("Город не найден")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                Spacer()
+            } else {
+                List {
+                    ForEach(viewModel.filteredCities) { city in
+                        Button { onSelect(city) } label: {
+                            HStack {
+                                Text(city.title)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .foregroundStyle(.ypBlack)
+                                    .frame(width: 11, height: 19)
+                            }
+                            .frame(height: 58)
+                            .contentShape(Rectangle())
+                            .scrollContentBackground(.hidden)
+                            .background(.ypWhite)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color("ypWhite"))
+                        .background(.ypWhite)
+                    }
+                    .background(.ypWhite)
+                }
+                .listStyle(.plain)
+                .background(.ypWhite)
+            }
         }
-        .background(Color("ypWhite"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color("ypWhite"), for: .navigationBar)
-        // Обновление фильтра
-        .onChange(of: viewModel.query) { _ in viewModel.updateFilter() }
-    }
-}
-
-private struct ListRowButton<Content: View>: View {
-    let height: CGFloat
-    let action: () -> Void
-    let content: () -> Content
-
-    init(height: CGFloat, action: @escaping () -> Void, @ViewBuilder content: @escaping () -> Content) {
-        self.height = height
-        self.action = action
-        self.content = content
-    }
-
-    var body: some View {
-        Button(action: action) {
-            content()
-                .frame(height: height)
-                .padding(.horizontal, 16)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        .navigationBarHidden(true)
+        .task { await viewModel.loadCities() }
+        .background(.ypWhite)
     }
 }

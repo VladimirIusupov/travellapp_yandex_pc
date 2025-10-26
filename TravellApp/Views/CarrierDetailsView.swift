@@ -1,134 +1,110 @@
 import SwiftUI
 
-struct CarrierDetailsView: View {
-    let item: CarrierItem
-
+// MARK: - View
+struct CarrierCardView: View {
+    
+    // MARK: - Properties
+    @StateObject private var viewModel = CarriersViewModel()
+    let carrierCode: String
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
-
-    private enum UI {
-        static let side: CGFloat = 16
-        static let logoHeight: CGFloat = 104
-        static let logoCorner: CGFloat = 20
-        static let logoImageHeight: CGFloat = 56
-        static let titleTop: CGFloat = 8
-        static let titleFont = Font.system(size: 24, weight: .bold)
-        static let vSpacing: CGFloat = 16
-        static let contactsSpacing: CGFloat = 24
-        static let bottomSpacer: CGFloat = 24
-    }
-
+    
+    // MARK: - Body
     var body: some View {
-        ZStack {
-            Color(.systemBackground).ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: UI.vSpacing) {
-
-                    // Логотип на белой карточке (104pt)
-                    LogoCard(
-                        image: item.logoImage,
-                        imageHeight: UI.logoImageHeight,
-                        cornerRadius: UI.logoCorner
-                    )
-                    .frame(height: UI.logoHeight)
-                    .padding(.horizontal, UI.side)
-                    .padding(.top, UI.side)
-
-                    // Название компании — 24 Bold
-                    Text(item.name)
-                        .font(UI.titleFont)
+        VStack(spacing: .zero) {
+            HStack {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 17, height: 22)
                         .foregroundStyle(.primary)
-                        .padding(.horizontal, UI.side)
-
-                    // Контакты
-                    VStack(alignment: .leading, spacing: UI.contactsSpacing) {
-                        ContactRow(
-                            title: "E-mail",
-                            value: "i.lozgkina@yandex.ru",
-                            action: { openURL(URL(string: "mailto:i.lozgkina@yandex.ru")!) }
-                        )
-                        ContactRow(
-                            title: "Телефон",
-                            value: "+7 (904) 329-27-71",
-                            action: { openURL(URL(string: "tel://+79043292771")!) }
-                        )
-                    }
-                    .padding(.horizontal, UI.side)
-
-                    Spacer(minLength: UI.bottomSpacer)
                 }
-                .background(.ypWhite)
-            }
-            .background(.ypWhite)
-        }
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) { BackChevron() .padding(.leading, -8) }
-            ToolbarItem(placement: .principal) {
+                Spacer()
                 Text("Информация о перевозчике")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.primary)
+                Spacer()
+                Color.clear.frame(width: 17, height: 22)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView("Загрузка…")
+                Spacer()
+            } else if let appError = viewModel.appError {
+                Spacer()
+                ErrorView(type: appError.errorType)
+                Spacer()
+            } else if let carrier = viewModel.carrier {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if let logo = carrier.logo, let url = URL(string: logo) {
+                            AsyncImage(url: url) { image in
+                                image.resizable()
+                                    .scaledToFit()
+                                    .frame(height: 120)
+                                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                                
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .padding(.top, 16)
+                            .padding(.horizontal, 16)
+                        }
+                        
+                        Text(carrier.title ?? "Без названия")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 16)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 28)
+                        
+                        VStack(alignment: .leading, spacing: 24) {
+                            if let email = carrier.email {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("E-mail")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Link(email, destination: URL(string: "mailto:\(email)")!)
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            
+                            if let phone = carrier.phone {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Телефон")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Link(phone, destination: URL(string: "tel:\(phone)")!)
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                        
+                        Spacer()
+                    }
+                    .padding(.top, 24)
+                }
+            } else {
+                Spacer()
+                Text("Вариантов нет")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.ypWhite)
+                Spacer()
             }
         }
+        .background(Color(.ypWhite).ignoresSafeArea())
+        .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .tabBar)
-    }
-}
-
-// MARK: - Подвью: карточка с логотипом (всегда белая)
-
-private struct LogoCard: View {
-    let image: Image
-    let imageHeight: CGFloat
-    let cornerRadius: CGFloat
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(.ypWhiteUniversal)
-
-            image
-                .resizable()
-                .scaledToFit()
-        }
-    }
-}
-
-// MARK: - Подвью: строка контакта
-
-private struct ContactRow: View {
-    let title: String
-    let value: String
-    let action: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(.primary)
-
-            Button(action: action) {
-                Text(value)
-                    .font(.system(size: 12, weight: .regular))
-                    .kerning(0.4)
-                    .foregroundStyle(.ypBlue)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-    }
-}
-
-// MARK: - Хелпер: ассетный логотип или SF Symbol
-
-private extension CarrierItem {
-    var logoImage: Image {
-        if UIImage(named: logoSystemName) != nil {
-            return Image(logoSystemName)
-        } else {
-            return Image(systemName: logoSystemName)
+        .task {
+            await viewModel.loadCarrier(code: carrierCode)
         }
     }
 }

@@ -13,8 +13,13 @@ struct AgreementWebView: View {
                 .navigationBarBackButtonHidden(true)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        BackChevron()
-                            .padding(.leading, -8)
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "chevron.left")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 17, height: 22)
+                                .foregroundStyle(.primary)
+                        }
                     }
                 }
                 .background(.ypWhite)
