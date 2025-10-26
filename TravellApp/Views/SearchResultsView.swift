@@ -2,17 +2,16 @@ import SwiftUI
 
 // MARK: - View
 struct SearchResultsView: View {
-    
+
     let fromCode: String
     let toCode: String
     let fromTitle: String
     let toTitle: String
-    
+
     @Binding var path: NavigationPath
     @StateObject private var viewModel = SearchResultsViewModel()
     @Environment(\.dismiss) private var dismiss
-    
-    
+
     var body: some View {
         VStack(spacing: 0) {
             headerView
@@ -26,14 +25,14 @@ struct SearchResultsView: View {
         .toolbar(.hidden, for: .tabBar)
         .task {
             await viewModel.loadResults(from: fromCode, to: toCode)
-            if viewModel.filters != nil { viewModel.applyFilters(viewModel.filters) }
+            if let filters = viewModel.filters { viewModel.applyFilters(filters) }
         }
     }
 }
 
 // MARK: - Subviews
 extension SearchResultsView {
-    
+
     @ViewBuilder private var headerView: some View {
         HStack {
             Text("\(fromTitle) → \(toTitle)")
@@ -45,12 +44,13 @@ extension SearchResultsView {
         .padding(.vertical, 12)
         .background(.ypWhite)
     }
-    
+
     @ViewBuilder private var contentView: some View {
         if viewModel.isLoading {
             Spacer()
             ProgressView("Загружаем рейсы…")
             Spacer()
+                .background(Color(.ypWhite).ignoresSafeArea())
         } else if let appError = viewModel.appError {
             Spacer()
             ErrorView(type: appError.errorType)
@@ -82,7 +82,7 @@ extension SearchResultsView {
             .background(Color(.ypWhite).ignoresSafeArea())
         }
     }
-    
+
     @ViewBuilder private var filterButton: some View {
         if !viewModel.originalResults.isEmpty {
             Button {
@@ -94,6 +94,7 @@ extension SearchResultsView {
                     if viewModel.filtersApplied {
                         Circle()
                             .fill(.ypRed)
+                            .background(.ypRed)
                             .frame(width: 8, height: 8)
                             .padding(.leading, 8)
                     }
@@ -109,7 +110,7 @@ extension SearchResultsView {
             .background(Color(.ypWhite).ignoresSafeArea())
         }
     }
-    
+
     private var backButton: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button { dismiss() } label: {

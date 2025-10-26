@@ -12,6 +12,7 @@ struct SettingsView: View {
                 Spacer()
                 ProgressView("Загрузка...")
                     .progressViewStyle(CircularProgressViewStyle())
+                    .background(Color(.ypWhite))
                 Spacer()
             } else if let appError = viewModel.appError {
                 
@@ -51,7 +52,7 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .background(Color(.systemBackground))
+                .background(Color(.ypWhite).ignoresSafeArea())
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .padding(.top, 16)
                 
@@ -66,6 +67,7 @@ struct SettingsView: View {
                         .foregroundStyle(.ypBlackUniversal)
                 }
                 .padding(.bottom, 16)
+                .background(Color(.ypWhite).ignoresSafeArea())
             }
         }
         .background(Color(.ypWhite).ignoresSafeArea())
@@ -73,7 +75,7 @@ struct SettingsView: View {
             AgreementWebView(urlString: "https://yandex.ru/legal/practicum_offer")
                 .toolbar(.hidden, for: .tabBar)
         }
-        
+        .background(Color(.ypWhite).ignoresSafeArea())
         .task {
             await viewModel.loadSettings()
         }
