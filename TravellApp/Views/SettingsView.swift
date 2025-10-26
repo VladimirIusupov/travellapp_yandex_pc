@@ -34,6 +34,7 @@ struct SettingsView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .background(Color(.ypWhite))
                     
                     Button(action: { viewModel.openAgreement() }) {
                         HStack {
@@ -49,8 +50,10 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
+                        .background(Color(.ypWhite))
                     }
                     .buttonStyle(.plain)
+                    .background(Color(.ypWhite))
                 }
                 .background(Color(.ypWhite).ignoresSafeArea())
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
