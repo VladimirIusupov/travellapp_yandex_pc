@@ -101,20 +101,3 @@ struct FiltersView: View {
     }
 }
 
-#if DEBUG
-import SwiftUI
-
-#Preview("Filters – light") {
-    NavigationStack {
-        FiltersView(onApply: { _ in })
-    }
-}
-
-#Preview("Filters – dark") {
-    NavigationStack {
-        FiltersView(onApply: { _ in })
-            .preferredColorScheme(.dark)
-    }
-}
-#endif
-

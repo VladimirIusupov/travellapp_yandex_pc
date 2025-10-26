@@ -11,7 +11,7 @@ struct StoryPageView: View {
         GeometryReader { geo in
             ZStack {
                 
-                Color.black.ignoresSafeArea()
+                Color.ypBlackUniversal.ignoresSafeArea()
                 
                 ZStack {
                     
@@ -42,6 +42,7 @@ struct StoryPageView: View {
                                     }
                                 }
                                 .frame(height: 6)
+                                .background(Color(.ypBlackUniversal).ignoresSafeArea())
                             }
                         }
                         .padding(.top, 28)

@@ -10,8 +10,7 @@ struct StoriesView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
-            
+            Color.ypBlack.ignoresSafeArea()
             TabView(selection: $viewModel.selectedIndex) {
                 ForEach(viewModel.stories.indices, id: \.self) { index in
                     StoryPageView(
@@ -20,14 +19,18 @@ struct StoriesView: View {
                         selectedIndex: viewModel.selectedIndex,
                         progress: progress
                     )
+                    .background(Color(.ypBlackUniversal).ignoresSafeArea())
                     .tag(index)
                     .onAppear {
                         viewModel.markStoryViewed(at: index)
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
+                    .background(Color(.ypBlackUniversal).ignoresSafeArea())
                 }
+                .background(Color(.ypBlackUniversal).ignoresSafeArea())
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .background(Color(.ypBlackUniversal).ignoresSafeArea())
         }
         .onChange(of: viewModel.selectedIndex) { _ in
             startTimer()

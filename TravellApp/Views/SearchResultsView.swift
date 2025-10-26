@@ -94,7 +94,6 @@ extension SearchResultsView {
                     if viewModel.filtersApplied {
                         Circle()
                             .fill(.ypRed)
-                            .background(.ypRed)
                             .frame(width: 8, height: 8)
                             .padding(.leading, 8)
                     }
