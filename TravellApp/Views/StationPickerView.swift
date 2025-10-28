@@ -1,47 +1,117 @@
 import SwiftUI
 
+// MARK: - View
 struct StationPickerView: View {
-    let cityTitle: String
-    @ObservedObject var viewModel: StationPickerViewModel
-    let onPick: (StationRow) -> Void
-
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: StationPickerViewModel
+    
+    let onSelect: (SelectedStation) -> Void
+    
+    init(cityId: String, onSelect: @escaping (SelectedStation) -> Void) {
+        _viewModel = StateObject(wrappedValue: StationPickerViewModel(cityId: cityId))
+        self.onSelect = onSelect
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            SearchBar(placeholder: "Введите запрос", text: $viewModel.query)
-            // Список станций
-            ScrollView {
-                LazyVStack(spacing: 0) { // без расстояния между ячейками
-                    ForEach(viewModel.filtered) { station in
-                        Button {
-                            onPick(station)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text(station.title)
-                                    .font(.system(size: 18, weight: .regular)) // SF Pro Regular 17
-                                    .kerning(-0.41)
-                                    .foregroundStyle(Color("ypBlack"))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                Spacer(minLength: 8)
-                                Image(systemName: "chevron.right")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 24, height: 24)                // 24×24
-                                    .foregroundStyle(Color("ypBlack").opacity(0.6))
-                            }
-                            .frame(height: 60)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 4)
-                            .background(Color("ypWhite"))
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
+            
+            HStack {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 17, height: 22)
+                        .foregroundStyle(.ypBlack)
+                        .background(.ypWhite)
+                }
+                .padding(.leading, 8)
+                .padding(.vertical, 11)
+                
+                Spacer()
+                
+                Text("Выбор станции")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                    .background(.ypWhite)
+                
+                Spacer()
+                
+                Color.clear
+                    .frame(width: 17, height: 22)
+                    .padding(.trailing, 8)
+            }
+            .padding(.bottom, 4)
+            
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.ypGrey)
+                
+                TextField("Введите запрос", text: $viewModel.searchText)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .foregroundStyle(.ypBlack)
+                    .background(.ypWhite)
+                
+                if !viewModel.searchText.isEmpty {
+                    Button { viewModel.searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.ypGrey)
                     }
                 }
             }
-            .background(Color("ypWhite"))
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .background(Color("Tertiary"))
+            .cornerRadius(10)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+            
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView("Загрузка...")
+                Spacer()
+            } else if let appError = viewModel.appError {
+                Spacer()
+                ErrorView(type: appError.errorType)
+                Spacer()
+            } else if viewModel.filteredStations.isEmpty {
+                Spacer()
+                Text("Станции не найдены")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.ypBlack)
+                    .background(.ypWhite)
+                Spacer()
+            } else {
+                List {
+                    ForEach(viewModel.filteredStations) { station in
+                        Button {
+                            onSelect(SelectedStation(code: station.id, title: station.title))
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(station.title)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .foregroundStyle(.ypWhite)
+                                    .frame(width: 11, height: 19)
+                            }
+                            .frame(height: 58)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color("ypWhite"))
+                        .background(.ypWhite)
+                    }
+                }
+                .listStyle(.plain)
+                .background(.ypWhite)
+            }
         }
-        .background(Color("ypWhite").ignoresSafeArea())
-        .onChange(of: viewModel.query) { _ in viewModel.updateFilter() }
+        .navigationBarHidden(true)
+        .task { await viewModel.loadStations() }
+        .toolbar(.hidden, for: .tabBar)
+        .background(.ypWhite)
     }
 }

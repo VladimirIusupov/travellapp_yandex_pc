@@ -3,7 +3,6 @@ import SwiftUI
 struct ServerErrorView: View {
     var message: String = ""               
     var onRetry: (() -> Void)? = nil
-
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()

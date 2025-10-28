@@ -1,91 +1,86 @@
 import SwiftUI
 
+// MARK: - View
 struct SettingsView: View {
-    @EnvironmentObject private var theme: ThemeManager
-    @State private var showAgreement = false
     
-    private let rowHeight: CGFloat = 60
-    private let sideInset: CGFloat = 16
+    @StateObject private var viewModel = SettingsViewModel()
     
     var body: some View {
-        ZStack {
-            Color("ypWhite").ignoresSafeArea()
-            VStack(spacing: 0) {
-                Color.clear.frame(height: 24)
-                List {
-                    // Строка: Тёмная тема
+        VStack(spacing: 0) {
+            
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView("Загрузка...")
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .background(Color(.ypWhite))
+                Spacer()
+            } else if let appError = viewModel.appError {
+                
+                Spacer()
+                ErrorView(type: appError.errorType)
+                Spacer()
+            } else {
+                
+                VStack(spacing: 0) {
+                    
                     HStack {
                         Text("Тёмная тема")
-                            .font(.system(size: 17, weight: .regular))
-                            .kerning(-0.41)
-                            .foregroundColor(Color("ypBlack"))
-                        Spacer(minLength: sideInset)
-                        Toggle("", isOn: $theme.isDarkTheme)
+                            .font(.system(size: 17))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Toggle("", isOn: viewModel.isDarkMode)
                             .labelsHidden()
-                            .tint(Color("ypBlue"))
+                            .tint(.blue)
                     }
-                    .frame(height: rowHeight)
-                    .listRowInsets(EdgeInsets(top: 0, leading: sideInset, bottom: 0, trailing: sideInset))
-                    .listRowBackground(Color("ypWhite"))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(.ypWhite))
                     
-                    // Строка: Пользовательское соглашение
-                    Button {
-                        showAgreement = true
-                    } label: {
+                    Button(action: { viewModel.openAgreement() }) {
                         HStack {
                             Text("Пользовательское соглашение")
-                                .font(.system(size: 17, weight: .regular))
-                                .kerning(-0.41)
-                                .foregroundColor(Color("ypBlack"))
-                            Spacer(minLength: sideInset)
+                                .font(.system(size: 17))
+                                .foregroundStyle(.primary)
+                            Spacer()
                             Image(systemName: "chevron.right")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(Color("ypBlack"))
+                                .foregroundStyle(.ypBlackUniversal)
+                                .frame(width: 11, height: 19)
                         }
-                        .frame(height: rowHeight)
-                        .contentShape(Rectangle())
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color(.ypWhite))
                     }
                     .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 0, leading: sideInset, bottom: 0, trailing: sideInset))
-                    .listRowBackground(Color("ypWhite"))
+                    .background(Color(.ypWhite))
                 }
-                .listStyle(.plain)
-                .listRowSeparator(.hidden)
-                .listSectionSpacing(0)
-                .scrollContentBackground(.hidden)
-                .background(Color("ypWhite"))
-            }
-            // Футер снизу
-            .safeAreaInset(edge: .bottom) {
-                footer
-                    .padding(.horizontal, sideInset)
-                    .padding(.bottom, 24)
-                    .background(Color("ypWhite"))
+                .background(Color(.ypWhite).ignoresSafeArea())
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.top, 16)
+                
+                Spacer()
+                
+                VStack(spacing: 4) {
+                    Text("Приложение использует API Яндекс.Расписания")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.ypBlackUniversal)
+                    Text("Версия 1.0 (beta)")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.ypBlackUniversal)
+                }
+                .padding(.bottom, 16)
+                .background(Color(.ypWhite).ignoresSafeArea())
             }
         }
-        .preferredColorScheme(theme.isDarkTheme ? .dark : .light)
-        .fullScreenCover(isPresented: $showAgreement) {
+        .background(Color(.ypWhite).ignoresSafeArea())
+        .fullScreenCover(isPresented: $viewModel.showAgreement) {
             AgreementWebView(urlString: "https://yandex.ru/legal/practicum_offer")
-                .preferredColorScheme(theme.isDarkTheme ? .dark : .light)
-                .ignoresSafeArea()
+                .toolbar(.hidden, for: .tabBar)
         }
-    }
-    
-    // MARK: - Footer (44pt)
-    private var footer: some View {
-        ZStack {
-            Color.clear.frame(height: 44)
-            VStack(spacing: 16) { // ← было 2, стало 16
-                Text("Приложение использует API «Яндекс.Расписания»")
-                Text("Версия 1.0 (beta)")
-            }
-            .font(.system(size: 12, weight: .regular))
-            .kerning(0.4)
-            .foregroundColor(Color("ypBlack"))
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
+        .background(Color(.ypWhite).ignoresSafeArea())
+        .task {
+            await viewModel.loadSettings()
         }
     }
 }

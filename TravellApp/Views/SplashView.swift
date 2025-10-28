@@ -1,23 +1,16 @@
 import SwiftUI
 
+// MARK: - View
 struct SplashView: View {
-    @ObservedObject var viewModel: SplashViewModel
-
+    
+    // MARK: - Body
     var body: some View {
         ZStack {
+            Color(.ypBlackUniversal).ignoresSafeArea()
             Image("logo")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-
-            if viewModel.showProgress {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .controlSize(.large)
-                    .tint(.white.opacity(0.9))
-            }
         }
-        .statusBarHidden(true)
-        .task { await viewModel.onAppear() }
     }
 }
